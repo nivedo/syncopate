@@ -1,0 +1,13 @@
+---
+key: testcluster
+data:
+  - filename: test1000.log
+    variables:
+      - pattern: "TEMP: (\\d+)"
+        description: "t1000_temp"
+      - pattern: "LOAD: (\\d+)"
+        description: "t1000_load"
+  - filename: test1001.log
+    variables:
+      - pattern: "AAPL PRICE: (\\d+)"
+        description: "aapl_price"

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Syncopate Demo</title>
+        <style>
+            body {
+                background-color: #3e454c;
+                color: #fff6e5;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            }
+            body h1 {
+                text-align: center;
+                font-size: 60px;
+                font-weight: 200;
+            }
+            body .data-box {
+                position: relative;
+                width: 300px;
+                height: 300px;
+                margin: 10px 20px;
+                float: left;
+                text-align: center;
+                border: 3px solid #59646e;
+                border-radius: 500px;
+            }
+            .data-box span {
+                font-size: 100px;
+                line-height: 300px;
+                vertical-align: middle;
+                color: #fff6e5;
+            }
+            .data-box label {
+                position: absolute;
+                bottom: 50px;
+                left: 35%;
+                font-weight: 200;
+                color: #ff7f66;
+            }
+            body .data-wrapper {
+                position: absolute;
+                top:200px;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 1050px;
+                height: 600px;
+
+                margin: auto;
+            }
+        </style>
+        <script type="text/javascript" src="jquery-1.11.3.min.js"></script>
+    </head>
+    <body>
+        <h1>Syncopate Demo</h1>
+        <div class="data-wrapper">
+            <div class="data-box">
+                <label>T1000 Temp</label>
+                <span id="t1000_temp">0</span>
+            </div>
+            <div class="data-box">
+                <label>T1000 Load</label>
+                <span id="t1000_load">0</span>
+            </div>
+            <div class="data-box">
+                <label>AAPL Price</label>
+                <span id="aapl_price">0</span>
+            </div>
+        </div>
+        <script>
+            var liveData = {}
+
+            $(function() {
+                if (window["WebSocket"]) {
+                    conn = new WebSocket("ws://api.blub.io:32795/ws?series=testcluster.t1000_temp&series=testcluster.t1000_load&series=testcluster.aapl_price");
+                    conn.onmessage = function(evt) {
+                        console.log(evt.data)
+                        parseData(evt.data);
+                    }
+                }
+            })
+
+            function parseData(rawData){
+                console.log(rawData);
+                data = $.parseJSON(rawData);
+                for(i = 0; i < data["Series"].length; i++) {
+                    for (var key in data["Series"][i]["Snapshot"]) {
+                        liveData[key] = data["Series"][i]["Snapshot"][key];
+                    }
+                }
+            }
+
+            function update(data) {
+                for (var key in data) {
+                    $("#" + key).text(data[key]);
+                }
+            }
+
+            // Add a random value to each line every second
+            setInterval(function() {
+                update(liveData);
+            }, 100);
+        </script>
+    </body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Syncopate Demo</title>
+        <style>
+            body {background-color: #444;}
+            body .canvas-wrapper {
+                margin: 0 auto;
+                margin-top: 100px;
+                width: 100%;
+            }
+            body .canvas-wrapper canvas {
+                padding-left: 0;
+                padding-right: 0;
+                margin-left: auto;
+                margin-right: auto;
+                display: block;
+                width: 1200px;
+            }
+        </style>
+        <script type="text/javascript" src="smoothie.js"></script>
+        <script type="text/javascript" src="jquery-1.11.3.min.js"></script>
+    </head>
+    <body>
+        <div class="canvas-wrapper">
+            <canvas id="mycanvas" width="1200" height="500"></canvas>
+        </div>
+        <script>
+            var liveData = {}
+            var tsMap = {}
+            var colorMap = ['rgb(42,153,222)','rgb(187,109,209)','rgb(126,230,183)']
+
+            $(function() {
+                if (window["WebSocket"]) {
+                    conn = new WebSocket("ws://api.blub.io:32795/ws?series=testcluster.t1000_temp&series=testcluster.t1000_load&series=testcluster.aapl_price");
+                    conn.onmessage = function(evt) {
+                        parseData(evt.data);
+                        if($.isEmptyObject(tsMap)) {
+                            tsMap = initialize(liveData);
+                        }
+                    }
+                }
+            })
+
+            function parseData(rawData){
+                data = $.parseJSON(rawData);
+                for(i = 0; i < data["Series"].length; i++) {
+                    for (var key in data["Series"][i]["Snapshot"]) {
+                        liveData[key] = data["Series"][i]["Snapshot"][key];
+                    }
+                }
+            }
+
+            var smoothie = new SmoothieChart({
+                maxValue: 600,
+                minValue: 0,
+                grid: { strokeStyle:'rgb(80, 80, 80)', fillStyle:'rgb(35, 35, 35)',
+                    lineWidth: 1, millisPerLine: 500, verticalSections: 8, },
+                labels: { fillStyle:'rgb(200, 200, 200)' }
+            });
+            smoothie.streamTo(document.getElementById("mycanvas"), 1000);
+            
+            function initialize(data) {
+                result = {}
+                var i = 0
+                for (var key in data) {
+                    result[key] = new TimeSeries();
+                    smoothie.addTimeSeries(result[key],
+                        { strokeStyle: colorMap[i], lineWidth:3 });
+                    i = i + 1
+                }
+                return result
+            }
+
+            function update(data) {
+                for (var key in data) {
+                    tsMap[key].append(new Date().getTime(), data[key]);
+                }
+            }
+
+            // Add a random value to each line every second
+            setInterval(function() {
+                if($.isEmptyObject(tsMap)) {
+                    return;
+                }
+                update(liveData);
+            }, 1000);
+        </script>
+    </body>
+</html>
