@@ -65,7 +65,8 @@ func main() {
     var config Config
     source, err := ioutil.ReadFile("syncopate.yaml")
     if err != nil {
-        panic(err)
+        fmt.Println("Could not locate syncopate.yaml. Terminating...")
+        return
     }
     err = yaml.Unmarshal(source, &config)
     if err != nil {
