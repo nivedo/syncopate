@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Syncopate Demo</title>
+        <style>
+            html body {
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                background-color: #ECF0F1;
+                color: #354b61;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            }
+            body .data-box {
+                position: relative;
+                width: 135px;
+                height: 135px;
+                margin: 10px 5px 0 5px;
+                float: left;
+                text-align: center;
+                border: 2px solid #517394;
+                border-radius: 0px;
+            }
+            .data-box span {
+                position: absolute;
+                width: 100%;
+                left: 0;
+                top: 23px;
+                font-size: 55px;
+                color: #fff6e5;
+            }
+            .data-box label {
+                font-size: 13px;
+                position: absolute;
+                width: 100%;
+                bottom: 15px;
+                left: 0px;
+                text-align: center;
+                font-weight: 200;
+                color: #ff7f66;
+            }
+            body .data-wrapper {
+                position: relative;
+                margin: 0 5px;
+            }
+
+            body .appbar {
+                position: fixed;
+                color: #fff6e5;
+                background-color: #273747;
+                left: 0;
+                width: 80px;
+                height: 100%;
+            }
+            body .sidebar {
+                position: fixed;
+                color: #fff6e5;
+                background-color: #354b61;
+                left: 80px;
+                width: 310px;
+                padding: 0;
+                height: 100%;
+            }
+            .sidebar-title {
+                height: 60px;
+                background-color: #ff7f66;
+                width: 100%;
+            }
+            .sidebar-title h1 {
+                text-align: center;
+                font-size: 25px;
+                line-height: 60px;
+                font-weight: 200;
+                margin: 0;
+            }
+            .sidebar .searchbar {
+                width: 100%;
+                border: none;
+                height: 50px;
+                margin: 0;
+                padding: 0;
+                background-color: #517394;
+            }
+            body .main-wrap {
+                position: relative;
+                margin-left: 390px;
+            }
+            .main-title {
+                background-color: #ddd;
+                height: 60px;
+                width: 100%;
+                padding-left: 20px;
+            }
+            .main-title h1 {
+                text-align: left;
+                font-size: 25px;
+                line-height: 60px;
+                font-weight: 400;
+                margin: 0;
+            }
+        </style>
+        <script type="text/javascript" src="jquery-1.11.3.min.js"></script>
+    </head>
+        <div class="appbar">
+            <ul>
+            </ul>
+        </div>
+        <div class="sidebar">
+            <div class="sidebar-title">
+                <h1>@testcluster</h1>
+            </div>
+            <div class="data-wrapper">
+                <div class="data-box">
+                    <label>#t1000_temp</label>
+                    <span id="t1000_temp">0</span>
+                </div>
+                <div class="data-box">
+                    <label>#t1000_load</label>
+                    <span id="t1000_load">0</span>
+                </div>
+                <div class="data-box">
+                    <label>#aapl_price</label>
+                    <span id="aapl_price">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="main-wrap">
+            <div class="main-title">
+                <h1>#aapl_price</h1>
+            </div>
+        </div>
+        <script>
+            var liveData = {}
+
+            $(function() {
+                if (window["WebSocket"]) {
+                    conn = new WebSocket("ws://api.blub.io:32796/ws?series=testcluster.t1000_temp&series=testcluster.t1000_load&series=testcluster.aapl_price");
+                    conn.onmessage = function(evt) {
+                        console.log(evt.data)
+                        parseData(evt.data);
+                    }
+                }
+            })
+
+            function parseData(rawData){
+                console.log(rawData);
+                data = $.parseJSON(rawData);
+                for(i = 0; i < data["Series"].length; i++) {
+                    for (var key in data["Series"][i]["Snapshot"]) {
+                        liveData[key] = data["Series"][i]["Snapshot"][key];
+                    }
+                }
+            }
+
+            function update(data) {
+                for (var key in data) {
+                    $("#" + key).text(data[key]);
+                }
+            }
+
+            // Add a random value to each line every second
+            setInterval(function() {
+                update(liveData);
+            }, 100);
+        </script>
+    </body>
+</html>
