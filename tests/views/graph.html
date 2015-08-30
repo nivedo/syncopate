@@ -32,7 +32,7 @@
 
             $(function() {
                 if (window["WebSocket"]) {
-                    conn = new WebSocket("ws://api.blub.io:32804/ws?series=testcluster.t1000_temp&series=testcluster.t1000_load&series=testcluster.aapl_price");
+                    conn = new WebSocket("ws://api.blub.io:32805/ws?series=testcluster.t1000_temp&series=testcluster.t1000_load&series=testcluster.aapl_price");
                     conn.onmessage = function(evt) {
                         parseData(evt.data);
                         if($.isEmptyObject(tsMap)) {
