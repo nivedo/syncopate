@@ -9,5 +9,5 @@ data:
         description: "t1000_load"
   - filename: test1001.log
     variables:
-      - pattern: "AAPL PRICE: (\\d+)"
+      - pattern: "AAPL PRICE: (\\d*\\.?\\d*)"
         description: "aapl_price"
