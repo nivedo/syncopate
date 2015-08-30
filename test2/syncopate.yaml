@@ -1,0 +1,7 @@
+---
+key: testcluster
+data:
+  - filename: PIPE
+    variables:
+      - pattern: "(\\d+) threads"
+        description: "num_threads"
