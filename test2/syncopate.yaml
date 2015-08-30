@@ -5,3 +5,5 @@ data:
     variables:
       - pattern: "(\\d+) threads"
         description: "num_threads"
+      - pattern: "CPU usage: (\\d*\\.?\\d*)%"
+        description: "cpu_usage"
