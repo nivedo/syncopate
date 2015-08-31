@@ -82,6 +82,7 @@ func startCluster(config Config, events chan WatchEvent) Cluster {
 	return cluster
 }
 
+// TODO: refactor function argument into struct
 func watch(
 	filename string,
 	clusterKey string,
