@@ -69,7 +69,14 @@ func startCluster(config Config, events chan WatchEvent) Cluster {
 			indexList[i] = seriesIndex
 			seriesIndex += 1
 		}
-		go watch(wf.Filename, cluster.Key, patternList, descList, indexList, events, time.Now().UTC().UnixNano()/int64(time.Microsecond))
+		go watch(
+			wf.Filename,
+			cluster.Key,
+			patternList,
+			descList,
+			indexList,
+			events,
+			time.Now().UTC().UnixNano()/int64(time.Microsecond))
 	}
 
 	return cluster
