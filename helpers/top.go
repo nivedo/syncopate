@@ -35,6 +35,14 @@ func ConvertToValidSeriesId(rawId string) string {
 	return newId
 }
 
+func InitTableHeaders(state *ParseState, line string) {
+	tokens := strings.Fields(line)
+	state.Headers = make([]string, len(tokens))
+
+	for i, t := range tokens {
+		state.Headers[i] = ConvertToValidSeriesId(t)
+	}
+}
 func ParseTableHeaders(state *ParseState, line string, lc int) {
 	lineTrim := strings.Replace(line, "N/A", "", -1)
 	lineTrim = strings.Trim(lineTrim, " ")
@@ -46,15 +54,6 @@ func ParseTableHeaders(state *ParseState, line string, lc int) {
 		InitTableHeaders(state, line)
 		// fmt.Println(line)
 		fmt.Println(strings.Join(state.Headers, ", "), len(state.Headers))
-	}
-}
-
-func InitTableHeaders(state *ParseState, line string) {
-	tokens := strings.Fields(line)
-	state.Headers = make([]string, len(tokens))
-
-	for i, t := range tokens {
-		state.Headers[i] = ConvertToValidSeriesId(t)
 	}
 }
 
