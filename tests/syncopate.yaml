@@ -1,5 +1,6 @@
 ---
-key: testcluster
+key: YOUR_API_KEY
+group: testgroup
 data:
   - filename: test1000.log
     variables:
