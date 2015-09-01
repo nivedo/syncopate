@@ -24,7 +24,7 @@ func main() {
             cluster.Series[wEvent.SeriesIndex].Events = append(cluster.Series[wEvent.SeriesIndex].Events, newEvent)
         }
         if changed && wEvent.SeriesIndex < 0 {
-            upload(&cluster, config.Key)
+            upload(&cluster, cluster.ID)
             changed = false
         }
     }

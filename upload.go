@@ -12,6 +12,8 @@ import (
 )
 
 const (
+    SALT_ID = "1V3S#F"
+    SALT_KEY = "AB#*FP"
     SERVER_URL = "http://api.blub.io:32794"
 )
 
@@ -42,10 +44,16 @@ func upload(cluster *Cluster, key string) {
     }
 }
 
-func hash(text string) string {
+func hashID(text string) string {
     h := md5.New()
-    h.Write([]byte(text))
+    h.Write([]byte(SALT_ID + text))
     return hex.EncodeToString(h.Sum(nil)[0:12])
+}
+
+func hashKey(text string) string {
+    h := md5.New()
+    h.Write([]byte(SALT_KEY + text))
+    return hex.EncodeToString(h.Sum(nil)[0:6])
 }
 
 func uploadHelper(events chan WatchEvent) {

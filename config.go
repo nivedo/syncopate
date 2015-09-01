@@ -9,6 +9,7 @@ import (
 type (
     Config struct {
         Key       string
+        Group     string
         Data      []WatchFile
         NumSeries int
     }

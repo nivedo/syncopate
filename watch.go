@@ -41,13 +41,15 @@ type (
 	Cluster struct {
 		Key       string
 		ID        string
+		Group     string
+		Token     string
 		SeriesIDs []string
 		Series    []Series
 	}
 )
 
 func startCluster(config Config, events chan WatchEvent) Cluster {
-	cluster := Cluster{Key: config.Key, ID: hash(config.Key)}
+	cluster := Cluster{Key: config.Key, ID: hashID(config.Key), Group: config.Group, Token: hashKey(config.Key)}
 	cluster.Series = make([]Series, config.NumSeries)
 	cluster.SeriesIDs = make([]string, config.NumSeries)
 
@@ -59,8 +61,8 @@ func startCluster(config Config, events chan WatchEvent) Cluster {
 		descList := make([]string, numVar)
 		indexList := make([]int, numVar)
 		for i, wv := range wf.Variables {
-			seriesStr := fmt.Sprintf("%s.%s", cluster.Key, wv.Description)
-			seriesID := hash(seriesStr)
+			seriesStr := fmt.Sprintf("%s.%s.%s", cluster.Token, cluster.Group, wv.Description)
+			seriesID := hashID(seriesStr)
 			cluster.SeriesIDs[seriesIndex] = seriesID
 			cluster.Series[seriesIndex] = Series{ID: seriesID}
 			cluster.Series[seriesIndex].Events = []Event{}
@@ -71,7 +73,8 @@ func startCluster(config Config, events chan WatchEvent) Cluster {
 		}
 		go watch(
 			wf.Filename,
-			cluster.Key,
+			cluster.Group,
+			cluster.Token,
 			patternList,
 			descList,
 			indexList,
@@ -85,7 +88,8 @@ func startCluster(config Config, events chan WatchEvent) Cluster {
 // TODO: refactor function argument into struct
 func watch(
 	filename string,
-	clusterKey string,
+	group string,
+	token string,
 	patterns []string,
 	descriptions []string,
 	seriesIndices []int,
@@ -115,12 +119,12 @@ func watch(
 					match, _ := regexp.MatchString(patterns[i], line)
 					if match {
 						r, _ := regexp.Compile(patterns[i])
-						seriesStr := fmt.Sprintf("%s.%s", clusterKey, descriptions[i])
-						seriesID := hash(seriesStr)
+						seriesStr := fmt.Sprintf("%s.%s.%s", token, group, descriptions[i])
+						seriesID := hashID(seriesStr)
 						allMatch := r.FindAllStringSubmatch(line, -1)
 						for j, matchVal := range allMatch {
 							eventStr := fmt.Sprintf("%s-%s-%d-%d-%d-%s", filename, patterns[i], lc, j, curTime, matchVal[0])
-							eventID := hash(eventStr)
+							eventID := hashID(eventStr)
 							events <- WatchEvent{ID: eventID, SeriesID: seriesID, SeriesIndex: seriesIndices[i],
 								Key: descriptions[i], Value: matchVal[1], Time: curTime}
 						}
@@ -142,12 +146,12 @@ func watch(
 					match, _ := regexp.MatchString(patterns[i], line.Text)
 					if match {
 						r, _ := regexp.Compile(patterns[i])
-						seriesStr := fmt.Sprintf("%s.%s", clusterKey, descriptions[i])
-						seriesID := hash(seriesStr)
+						seriesStr := fmt.Sprintf("%s.%s.%s", token, group, descriptions[i])
+						seriesID := hashID(seriesStr)
 						allMatch := r.FindAllStringSubmatch(line.Text, -1)
 						for j, matchVal := range allMatch {
 							eventStr := fmt.Sprintf("%s-%s-%d-%d-%d-%s", filename, patterns[i], lc, j, curTime, matchVal[0])
-							eventID := hash(eventStr)
+							eventID := hashID(eventStr)
 							events <- WatchEvent{ID: eventID, SeriesID: seriesID, SeriesIndex: seriesIndices[i],
 								Key: descriptions[i], Value: matchVal[1], Time: curTime}
 						}
