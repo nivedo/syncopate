@@ -1,4 +1,4 @@
-package main
+package main //helpers
 
 import (
     "bufio"
@@ -16,6 +16,10 @@ type ParseState struct {
     InTable   bool
     LineCount int
     Headers   []string
+}
+
+func UploadWatchEventMap(watchEventMap WatchEventMap) {
+    fmt.Println(watchEventMap)
 }
 
 func ParseTable(text string) {
@@ -91,7 +95,7 @@ func ParseTopHeaders(state *ParseState, line string, watchEventMap WatchEventMap
                             if verbose {
                                 fmt.Print(seriesKey, "=", v, ",")
                             }
-							watchEventMap[seriesKey] = v
+                            watchEventMap[seriesKey] = v
                         }
                     }
                 }
@@ -108,15 +112,15 @@ func ParseTopMacOSX(state *ParseState, text string, watchEventMap WatchEventMap)
 
     if len(lines) > 0 {
         if strings.Contains(lines[0], "Processes") {
-			fmt.Println(watchEventMap)
+            UploadWatchEventMap(watchEventMap)
             ResetParseState(state)
             fmt.Println(lines[0])
-			
-			// NOTE: Cannot assign a new map to watchEventMap because that doesn't
-			//       change the reference in other function calls
-			for k := range watchEventMap {
-				delete(watchEventMap, k)
-			}
+            
+            // NOTE: Cannot assign a new map to watchEventMap because that doesn't
+            //       change the reference in other function calls
+            for k := range watchEventMap {
+                delete(watchEventMap, k)
+            }
         }
 
         state.LineCount += len(lines)
