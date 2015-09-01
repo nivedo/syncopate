@@ -49,11 +49,15 @@ type (
 )
 
 func startCluster(config Config, events chan WatchEvent) Cluster {
-	cluster := Cluster{Key: config.Key, ID: hashID(config.Key), Group: config.Group, Token: hashKey(config.Key)}
+	cluster := Cluster{
+		Key:   config.Key,
+		ID:    hashID(config.Key),
+		Group: config.Group,
+		Token: hashKey(config.Key)}
 	cluster.Series = make([]Series, config.NumSeries)
 	cluster.SeriesIDs = make([]string, config.NumSeries)
 
-	log.Printf(">>> STARTING CLUSTER (API: %s) (GROUP: %s) (TOKEN: %s)\n\n",cluster.Key,cluster.Group,cluster.Token)
+	log.Printf(">>> STARTING CLUSTER (API: %s) (GROUP: %s) (TOKEN: %s)\n\n", cluster.Key, cluster.Group, cluster.Token)
 
 	seriesIndex := 0
 
@@ -154,8 +158,13 @@ func watch(
 						for j, matchVal := range allMatch {
 							eventStr := fmt.Sprintf("%s-%s-%d-%d-%d-%s", filename, patterns[i], lc, j, curTime, matchVal[0])
 							eventID := hashID(eventStr)
-							events <- WatchEvent{ID: eventID, SeriesID: seriesID, SeriesIndex: seriesIndices[i],
-								Key: descriptions[i], Value: matchVal[1], Time: curTime}
+							events <- WatchEvent{
+								ID:          eventID,
+								SeriesID:    seriesID,
+								SeriesIndex: seriesIndices[i],
+								Key:         descriptions[i],
+								Value:       matchVal[1],
+								Time:        curTime}
 						}
 					}
 				}
