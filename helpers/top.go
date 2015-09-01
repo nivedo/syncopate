@@ -65,7 +65,8 @@ func ParseTableHeaders(state *ParseState, line string, lc int) {
     }
 }
 
-func ParseTopHeaders(state *ParseState, line string, watchEventMap WatchEventMap) {
+func ParseTopHeaders(state *ParseState, line string, watchEventMap WatchEventMap) bool{
+    valid := true
     if !state.InTable {
         verbose := false
         line = strings.TrimRight(line, ".")
@@ -96,7 +97,10 @@ func ParseTopHeaders(state *ParseState, line string, watchEventMap WatchEventMap
                             if verbose {
                                 fmt.Print(seriesKey, "=", v, ",")
                             }
-                            watchEventMap[seriesKey] = v
+                            valid = len(seriesKey) > 0 && len(v) > 0
+                            if valid {
+                                watchEventMap[seriesKey] = v
+                            }
                         }
                     }
                 }
@@ -106,6 +110,7 @@ func ParseTopHeaders(state *ParseState, line string, watchEventMap WatchEventMap
             }
         }
     }
+    return valid
 }
 
 func ParseTopMacOSX(state *ParseState, text string, watchEventMap WatchEventMap) {
