@@ -1,12 +1,6 @@
 package main
 
-import (
-    "log"
-)
-
 func main() {
-    log.Println("Syncopate is initializing...")
-
     config := loadConfig()
     events := make(chan WatchEvent, 1)
 

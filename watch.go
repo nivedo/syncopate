@@ -53,6 +53,8 @@ func startCluster(config Config, events chan WatchEvent) Cluster {
 	cluster.Series = make([]Series, config.NumSeries)
 	cluster.SeriesIDs = make([]string, config.NumSeries)
 
+	log.Printf(">>> STARTING CLUSTER (API: %s) (GROUP: %s) (TOKEN: %s)\n\n",cluster.Key,cluster.Group,cluster.Token)
+
 	seriesIndex := 0
 
 	for _, wf := range config.Data {
