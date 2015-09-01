@@ -60,7 +60,7 @@ func ParseTableHeaders(state *ParseState, line string, lc int) {
     }
 }
 
-func ParseTopHeaders(state *ParseState, line string) {
+func ParseTopHeaders(state *ParseState, line string, watchEventMap WatchEventMap) {
     if !state.InTable {
         verbose := false
         line = strings.TrimRight(line, ".")
@@ -91,6 +91,7 @@ func ParseTopHeaders(state *ParseState, line string) {
                             if verbose {
                                 fmt.Print(seriesKey, "=", v, ",")
                             }
+							watchEventMap[seriesKey] = v
                         }
                     }
                 }
@@ -102,20 +103,23 @@ func ParseTopHeaders(state *ParseState, line string) {
     }
 }
 
-func ParseTopMacOSX(state *ParseState, text string) WatchEventMap {
+func ParseTopMacOSX(state *ParseState, text string, watchEventMap WatchEventMap) {
     lines := strings.Split(text, "\n")
-
-    watchEventMap := make(WatchEventMap)
 
     if len(lines) > 0 {
         if strings.Contains(lines[0], "Processes") {
+			fmt.Println(watchEventMap)
             ResetParseState(state)
             fmt.Println(lines[0])
+
+			for k := range watchEventMap {
+				delete(watchEventMap, k)
+			}
         }
 
         state.LineCount += len(lines)
         for i, line := range lines {
-            ParseTopHeaders(state, line)
+            ParseTopHeaders(state, line, watchEventMap)
             ParseTableHeaders(state, line, i)
 
             if !state.InTable {
@@ -132,8 +136,6 @@ func ParseTopMacOSX(state *ParseState, text string) WatchEventMap {
         fmt.Println()
         ParseTable(text)
     }
-
-    return watchEventMap
 }
 
 func ReadStdin() {
@@ -141,6 +143,7 @@ func ReadStdin() {
     parseState := &ParseState{InTable: false, LineCount: 0}
     r := bufio.NewReader(os.Stdin)
     buf := make([]byte, 0, 4*1024)
+    watchEventMap := make(WatchEventMap)
     for {
         // n is the number of bytes read
         n, err := r.Read(buf[:cap(buf)])
@@ -158,7 +161,7 @@ func ReadStdin() {
         nBytes += int64(len(buf))
         line := string(buf)
         // fmt.Println(line)
-        ParseTopMacOSX(parseState, line)
+        ParseTopMacOSX(parseState, line, watchEventMap)
     }
 }
 
