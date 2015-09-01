@@ -60,6 +60,7 @@ func ParseTableHeaders(state *ParseState, line string, lc int) {
 
 func ParseTopHeaders(state *ParseState, line string) {
 	if !state.InTable {
+		line = strings.TrimRight(line, ".")
 		tokens := strings.Split(line, ":")
 
 		numTokens := len(tokens)
@@ -67,9 +68,22 @@ func ParseTopHeaders(state *ParseState, line string) {
 			hasAlpha, _ := regexp.MatchString("[a-zA-Z]+", tokens[0])
 			if hasAlpha && numTokens == 2 {
 				// seriesId := ConvertToValidSeriesId(tokens[0])
-				seriesId := tokens[0]
+				seriesIdPrefix := tokens[0]
 				statPairs := strings.Split(tokens[1], ",")
-				fmt.Println(seriesId, statPairs)
+				for _, p := range statPairs {
+					p = strings.TrimLeft(p, " ")
+					p = strings.TrimRight(p, " ")
+					if len(p) > 0 {
+						ptokens := strings.Split(p, " ")
+						if len(ptokens) >= 2 {
+							v := ptokens[0]
+							k := strings.Join(ptokens[1:], "_")
+							seriesId := seriesIdPrefix + "_" + k
+							fmt.Print(seriesId, "=", v, ",")
+						}
+					}
+				}
+				fmt.Println("")
 			}
 		}
 	}
