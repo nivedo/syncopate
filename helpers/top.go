@@ -20,6 +20,7 @@ type ParseState struct {
 
 func UploadWatchEventMap(watchEventMap WatchEventMap) {
     fmt.Println(watchEventMap)
+
 }
 
 func ParseTable(text string) {
