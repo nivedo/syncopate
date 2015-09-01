@@ -60,6 +60,7 @@ func ParseTableHeaders(state *ParseState, line string, lc int) {
 
 func ParseTopHeaders(state *ParseState, line string) {
 	if !state.InTable {
+		verbose := false
 		line = strings.TrimRight(line, ".")
 		tokens := strings.Split(line, ":")
 
@@ -73,7 +74,9 @@ func ParseTopHeaders(state *ParseState, line string) {
 				statPairs := strings.FieldsFunc(str, func(r rune) bool {
 					return r == ',' || r == '(' || r == ')'
 				})
-				fmt.Println(statPairs)
+				if verbose {
+					fmt.Println(statPairs)
+				}
 				for _, p := range statPairs {
 					pair := strings.TrimLeft(p, " ")
 					pair = strings.TrimRight(pair, " ")
@@ -83,11 +86,15 @@ func ParseTopHeaders(state *ParseState, line string) {
 							v := ptokens[0]
 							k := strings.Join(ptokens[1:], "_")
 							seriesId := ConvertToValidSeriesId(seriesIdPrefix + "_" + k)
-							fmt.Print(seriesId, "=", v, ",")
+							if verbose {
+								fmt.Print(seriesId, "=", v, ",")
+							}
 						}
 					}
 				}
-				fmt.Println("")
+				if verbose {
+					fmt.Println("")
+				}
 			}
 		}
 	}
