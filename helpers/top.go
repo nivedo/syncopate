@@ -69,12 +69,15 @@ func ParseTopHeaders(state *ParseState, line string) {
 			if hasAlpha && numTokens == 2 {
 				// seriesId := ConvertToValidSeriesId(tokens[0])
 				seriesIdPrefix := tokens[0]
-				statPairs := strings.Split(tokens[1], ",")
+				statPairs := strings.FieldsFunc(tokens[1], func(r rune) bool {
+					return r == ',' || r == '(' || r == ')'
+				})
+				fmt.Println(statPairs)
 				for _, p := range statPairs {
-					p = strings.TrimLeft(p, " ")
-					p = strings.TrimRight(p, " ")
-					if len(p) > 0 {
-						ptokens := strings.Split(p, " ")
+					pair := strings.TrimLeft(p, " ")
+					pair = strings.TrimRight(pair, " ")
+					if len(pair) > 1 {
+						ptokens := strings.Split(pair, " ")
 						if len(ptokens) >= 2 {
 							v := ptokens[0]
 							k := strings.Join(ptokens[1:], "_")
