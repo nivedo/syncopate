@@ -67,9 +67,10 @@ func ParseTopHeaders(state *ParseState, line string) {
 		if numTokens > 0 {
 			hasAlpha, _ := regexp.MatchString("[a-zA-Z]+", tokens[0])
 			if hasAlpha && numTokens == 2 {
-				// seriesId := ConvertToValidSeriesId(tokens[0])
 				seriesIdPrefix := tokens[0]
-				statPairs := strings.FieldsFunc(tokens[1], func(r rune) bool {
+				reg, _ := regexp.Compile("\\([0-9]+\\)")
+				str := reg.ReplaceAllString(tokens[1], "")
+				statPairs := strings.FieldsFunc(str, func(r rune) bool {
 					return r == ',' || r == '(' || r == ')'
 				})
 				fmt.Println(statPairs)
@@ -81,7 +82,7 @@ func ParseTopHeaders(state *ParseState, line string) {
 						if len(ptokens) >= 2 {
 							v := ptokens[0]
 							k := strings.Join(ptokens[1:], "_")
-							seriesId := seriesIdPrefix + "_" + k
+							seriesId := ConvertToValidSeriesId(seriesIdPrefix + "_" + k)
 							fmt.Print(seriesId, "=", v, ",")
 						}
 					}
