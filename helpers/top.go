@@ -77,14 +77,19 @@ func ParseTopHeaders(state *ParseState, line string, watchEventMap WatchEventMap
             hasAlpha, _ := regexp.MatchString("[a-zA-Z]+", tokens[0])
             if hasAlpha && numTokens == 2 {
                 seriesIdPrefix := tokens[0]
+
+                // Get rid of (number)'s, confuses the split on ,()
                 reg, _ := regexp.Compile("\\([0-9]+\\)")
                 str := reg.ReplaceAllString(tokens[1], "")
+
+                // Split on ,()
                 statPairs := strings.FieldsFunc(str, func(r rune) bool {
                     return r == ',' || r == '(' || r == ')'
                 })
                 if verbose {
                     fmt.Println(statPairs)
                 }
+                // StatPairs separated by commas
                 for _, p := range statPairs {
                     pair := strings.TrimLeft(p, " ")
                     pair = strings.TrimRight(pair, " ")
