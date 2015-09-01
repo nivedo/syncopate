@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/ActiveState/tail"
 	"io"
 	"log"
@@ -24,11 +23,16 @@ type (
 	}
 	WatchEvent struct {
 		Time        int64
-		ID          string
 		SeriesID    string
 		SeriesIndex int
 		Key         string
 		Value       string
+	}
+	WatchConfig struct {
+		Filename     string
+		Patterns     []string
+		Descriptions []string
+		Index        []int
 	}
 	Event struct {
 		Time int64
@@ -62,48 +66,49 @@ func startCluster(config Config, events chan WatchEvent) Cluster {
 	seriesIndex := 0
 
 	for _, wf := range config.Data {
-		numVar := len(wf.Variables)
-		patternList := make([]string, numVar)
-		descList := make([]string, numVar)
-		indexList := make([]int, numVar)
-		for i, wv := range wf.Variables {
-			seriesStr := fmt.Sprintf("%s.%s.%s", cluster.Token, cluster.Group, wv.Description)
-			seriesID := hashID(seriesStr)
+		watchCfg := WatchConfig{Filename: wf.Filename}
+		for _, wv := range wf.Variables {
+			seriesID := makeSeriesID(cluster.Token, cluster.Group, wv.Description)
 			cluster.SeriesIDs[seriesIndex] = seriesID
 			cluster.Series[seriesIndex] = Series{ID: seriesID}
 			cluster.Series[seriesIndex].Events = []Event{}
-			patternList[i] = wv.Pattern
-			descList[i] = wv.Description
-			indexList[i] = seriesIndex
+			watchCfg.Patterns = append(watchCfg.Patterns, wv.Pattern)
+			watchCfg.Descriptions = append(watchCfg.Descriptions, wv.Description)
+			watchCfg.Index = append(watchCfg.Index, seriesIndex)
 			seriesIndex += 1
 		}
-		go watch(
-			wf.Filename,
-			cluster.Group,
-			cluster.Token,
-			patternList,
-			descList,
-			indexList,
-			events,
-			time.Now().UTC().UnixNano()/int64(time.Microsecond))
+		go watch(watchCfg, &cluster, events)
 	}
 
 	return cluster
 }
 
-// TODO: refactor function argument into struct
-func watch(
-	filename string,
-	group string,
-	token string,
-	patterns []string,
-	descriptions []string,
-	seriesIndices []int,
-	events chan WatchEvent,
-	watchStart int64) {
-	log.Printf("[TRACKING] %s -- Variables: %s\n", filename, descriptions)
-	lc := 0
-	if filename == "PIPE" {
+// Use this function for each mode
+func watchHelper(content string, wc WatchConfig, cluster *Cluster, events chan WatchEvent) {
+	for i, _ := range wc.Patterns {
+		match, _ := regexp.MatchString(wc.Patterns[i], content)
+		if match {
+			r, _ := regexp.Compile(wc.Patterns[i])
+			seriesID := makeSeriesID(cluster.Token, cluster.Group, wc.Descriptions[i])
+			allMatch := r.FindAllStringSubmatch(content, -1)
+			for _, matchVal := range allMatch {
+				events <- WatchEvent{
+					SeriesID:    seriesID,
+					SeriesIndex: wc.Index[i],
+					Key:         wc.Descriptions[i],
+					Value:       matchVal[1],
+					Time:        time.Now().UTC().UnixNano() / int64(time.Microsecond)}
+			}
+		}
+	}
+}
+
+func watch(wc WatchConfig, cluster *Cluster, events chan WatchEvent) {
+
+	watchStart := time.Now().UTC().UnixNano()/int64(time.Microsecond)
+	log.Printf("[TRACKING] %s -- Variables: %s\n", wc.Filename, wc.Descriptions)
+
+	if wc.Filename == "_pipe" {
 		r := bufio.NewReader(os.Stdin)
 		buf := make([]byte, 0, 4*1024)
 		for {
@@ -118,66 +123,23 @@ func watch(
 				}
 				log.Fatal(err)
 			}
-			line := string(buf)
-			curTime := time.Now().UTC().UnixNano() / int64(time.Microsecond)
-			if curTime-watchStart > 1e6 {
-				for i, _ := range patterns {
-					match, _ := regexp.MatchString(patterns[i], line)
-					if match {
-						r, _ := regexp.Compile(patterns[i])
-						seriesStr := fmt.Sprintf("%s.%s.%s", token, group, descriptions[i])
-						seriesID := hashID(seriesStr)
-						allMatch := r.FindAllStringSubmatch(line, -1)
-						for j, matchVal := range allMatch {
-							eventStr := fmt.Sprintf("%s-%s-%d-%d-%d-%s", filename, patterns[i], lc, j, curTime, matchVal[0])
-							eventID := hashID(eventStr)
-							events <- WatchEvent{
-								ID:          eventID,
-								SeriesID:    seriesID,
-								SeriesIndex: seriesIndices[i],
-								Key:         descriptions[i],
-								Value:       matchVal[1],
-								Time:        curTime}
-						}
-					}
-				}
-			}
-			lc = lc + 1
+			content := string(buf)
+			watchHelper(content, wc, cluster, events)
 			// process buf
 			if err != nil && err != io.EOF {
 				log.Fatal(err)
 			}
 		}
 	} else {
-		t, err := tail.TailFile(filename, tail.Config{Follow: true})
+		t, err := tail.TailFile(wc.Filename, tail.Config{Follow: true})
 		for line := range t.Lines {
 			curTime := time.Now().UTC().UnixNano() / int64(time.Microsecond)
 			if curTime-watchStart > 1e6 {
-				for i, _ := range patterns {
-					match, _ := regexp.MatchString(patterns[i], line.Text)
-					if match {
-						r, _ := regexp.Compile(patterns[i])
-						seriesStr := fmt.Sprintf("%s.%s.%s", token, group, descriptions[i])
-						seriesID := hashID(seriesStr)
-						allMatch := r.FindAllStringSubmatch(line.Text, -1)
-						for j, matchVal := range allMatch {
-							eventStr := fmt.Sprintf("%s-%s-%d-%d-%d-%s", filename, patterns[i], lc, j, curTime, matchVal[0])
-							eventID := hashID(eventStr)
-							events <- WatchEvent{
-								ID:          eventID,
-								SeriesID:    seriesID,
-								SeriesIndex: seriesIndices[i],
-								Key:         descriptions[i],
-								Value:       matchVal[1],
-								Time:        curTime}
-						}
-					}
-				}
+				watchHelper(line.Text, wc, cluster, events)
 			}
-			lc = lc + 1
 		}
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	}
 }

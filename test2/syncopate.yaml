@@ -2,7 +2,7 @@
 key: YOUR_API_KEY
 group: testgroup
 data:
-  - filename: PIPE
+  - filename: _pipe
     variables:
       - pattern: "(\\d+) threads"
         description: "num_threads"
