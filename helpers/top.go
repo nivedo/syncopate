@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+type WatchEventMap map[string]string
+
 type ParseState struct {
 	InTable   bool
 	LineCount int
@@ -24,7 +26,7 @@ func ResetParseState(state *ParseState) {
 	state.LineCount = 0
 }
 
-func ConvertToValidSeriesId(rawId string) string {
+func ConvertToValidSeriesKey(rawId string) string {
 	// Convert #, %
 	newId := strings.Replace(rawId, "#", "n", -1)
 	newId = strings.Replace(newId, "%", "p", -1)
@@ -40,7 +42,7 @@ func InitTableHeaders(state *ParseState, line string) {
 	state.Headers = make([]string, len(tokens))
 
 	for i, t := range tokens {
-		state.Headers[i] = ConvertToValidSeriesId(t)
+		state.Headers[i] = ConvertToValidSeriesKey(t)
 	}
 }
 
@@ -85,9 +87,9 @@ func ParseTopHeaders(state *ParseState, line string) {
 						if len(ptokens) >= 2 {
 							v := ptokens[0]
 							k := strings.Join(ptokens[1:], "_")
-							seriesId := ConvertToValidSeriesId(seriesIdPrefix + "_" + k)
+							seriesKey := ConvertToValidSeriesKey(seriesIdPrefix + "_" + k)
 							if verbose {
-								fmt.Print(seriesId, "=", v, ",")
+								fmt.Print(seriesKey, "=", v, ",")
 							}
 						}
 					}
@@ -100,8 +102,10 @@ func ParseTopHeaders(state *ParseState, line string) {
 	}
 }
 
-func ParseTopMacOSX(state *ParseState, text string) {
+func ParseTopMacOSX(state *ParseState, text string) WatchEventMap {
 	lines := strings.Split(text, "\n")
+
+	watchEventMap := make(WatchEventMap)
 
 	if len(lines) > 0 {
 		if strings.Contains(lines[0], "Processes") {
@@ -128,6 +132,8 @@ func ParseTopMacOSX(state *ParseState, text string) {
 		fmt.Println()
 		ParseTable(text)
 	}
+
+	return watchEventMap
 }
 
 func ReadStdin() {
