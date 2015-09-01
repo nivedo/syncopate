@@ -56,9 +56,15 @@ func hashKey(text string) string {
     return hex.EncodeToString(h.Sum(nil)[0:6])
 }
 
+func makeSeriesID(token string, group string, desc string) string {
+    strID := fmt.Sprintf("%s.%s.%s", token, group, desc)
+    hid := hashID(strID)
+    return hid
+}
+
 func uploadHelper(events chan WatchEvent) {
     for {
         time.Sleep(time.Second * 1)
-        events <- WatchEvent{SeriesIndex: -1, ID: "upload"}
+        events <- WatchEvent{SeriesIndex: -1}
     }
 }

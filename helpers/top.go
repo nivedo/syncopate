@@ -111,7 +111,9 @@ func ParseTopMacOSX(state *ParseState, text string, watchEventMap WatchEventMap)
 			fmt.Println(watchEventMap)
             ResetParseState(state)
             fmt.Println(lines[0])
-
+			
+			// NOTE: Cannot assign a new map to watchEventMap because that doesn't
+			//       change the reference in other function calls
 			for k := range watchEventMap {
 				delete(watchEventMap, k)
 			}
