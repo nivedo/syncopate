@@ -131,8 +131,13 @@ func watch(
 						for j, matchVal := range allMatch {
 							eventStr := fmt.Sprintf("%s-%s-%d-%d-%d-%s", filename, patterns[i], lc, j, curTime, matchVal[0])
 							eventID := hashID(eventStr)
-							events <- WatchEvent{ID: eventID, SeriesID: seriesID, SeriesIndex: seriesIndices[i],
-								Key: descriptions[i], Value: matchVal[1], Time: curTime}
+							events <- WatchEvent{
+								ID:          eventID,
+								SeriesID:    seriesID,
+								SeriesIndex: seriesIndices[i],
+								Key:         descriptions[i],
+								Value:       matchVal[1],
+								Time:        curTime}
 						}
 					}
 				}
