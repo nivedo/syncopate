@@ -43,6 +43,7 @@ func InitTableHeaders(state *ParseState, line string) {
 		state.Headers[i] = ConvertToValidSeriesId(t)
 	}
 }
+
 func ParseTableHeaders(state *ParseState, line string, lc int) {
 	lineTrim := strings.Replace(line, "N/A", "", -1)
 	lineTrim = strings.Trim(lineTrim, " ")
@@ -57,6 +58,23 @@ func ParseTableHeaders(state *ParseState, line string, lc int) {
 	}
 }
 
+func ParseTopHeaders(state *ParseState, line string) {
+	if !state.InTable {
+		tokens := strings.Split(line, ":")
+
+		numTokens := len(tokens)
+		if numTokens > 0 {
+			hasAlpha, _ := regexp.MatchString("[a-zA-Z]+", tokens[0])
+			if hasAlpha && numTokens == 2 {
+				// seriesId := ConvertToValidSeriesId(tokens[0])
+				seriesId := tokens[0]
+				statPairs := strings.Split(tokens[1], ",")
+				fmt.Println(seriesId, statPairs)
+			}
+		}
+	}
+}
+
 func ParseTopMacOSX(state *ParseState, text string) {
 	lines := strings.Split(text, "\n")
 
@@ -68,6 +86,7 @@ func ParseTopMacOSX(state *ParseState, text string) {
 
 		state.LineCount += len(lines)
 		for i, line := range lines {
+			ParseTopHeaders(state, line)
 			ParseTableHeaders(state, line, i)
 
 			if !state.InTable {
