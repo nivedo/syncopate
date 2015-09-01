@@ -8,6 +8,7 @@ import (
     "os"
     "regexp"
     "strings"
+    "strconv"
 )
 
 type WatchEventMap map[string]string
@@ -65,6 +66,14 @@ func ParseTableHeaders(state *ParseState, line string, lc int) {
     }
 }
 
+func InsertWatchEventMap(watchEventMap WatchEventMap, key string, value string) bool {
+    valid := len(key) > 0 && len(value) > 0
+    if valid {
+        watchEventMap[key] = value
+    }
+    return valid
+}
+
 func ParseTopHeaders(state *ParseState, line string, watchEventMap WatchEventMap) bool{
     valid := true
     if !state.InTable {
@@ -90,10 +99,11 @@ func ParseTopHeaders(state *ParseState, line string, watchEventMap WatchEventMap
                     fmt.Println(statPairs)
                 }
                 // StatPairs separated by commas
-                for _, p := range statPairs {
+                for i, p := range statPairs {
                     pair := strings.TrimLeft(p, " ")
                     pair = strings.TrimRight(pair, " ")
-                    if len(pair) > 1 {
+                    // Check empty string
+                    if len(pair) > 0 {
                         ptokens := strings.Split(pair, " ")
                         if len(ptokens) >= 2 {
                             v := ptokens[0]
@@ -102,10 +112,11 @@ func ParseTopHeaders(state *ParseState, line string, watchEventMap WatchEventMap
                             if verbose {
                                 fmt.Print(seriesKey, "=", v, ",")
                             }
-                            valid = len(seriesKey) > 0 && len(v) > 0
-                            if valid {
-                                watchEventMap[seriesKey] = v
-                            }
+                            valid = InsertWatchEventMap(watchEventMap, seriesKey, v)
+                        } else if len(ptokens) == 1 {
+                            // Load avg do not have extra fields
+                            seriesKey := ConvertToValidSeriesKey(seriesIdPrefix + "_" + strconv.Itoa(i+1))
+                            valid = InsertWatchEventMap(watchEventMap, seriesKey, ptokens[0])
                         }
                     }
                 }
