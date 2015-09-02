@@ -14,7 +14,8 @@ import (
 const (
     SALT_ID = "1V3S#F"
     SALT_KEY = "AB#*FP"
-    SERVER_URL = "http://api.blub.io:32794"
+    //SERVER_URL = "http://localhost:8080"
+    SERVER_URL = "http://api.blub.io:32818"
 )
 
 func Upload(cluster *Cluster, key string) {
@@ -39,8 +40,8 @@ func Upload(cluster *Cluster, key string) {
     }
     defer resp.Body.Close()
 
-    for i, _ := range cluster.Series {
-        cluster.Series[i].Events = nil
+    for k := range cluster.Series {
+        delete(cluster.Series, k)
     }
 }
 

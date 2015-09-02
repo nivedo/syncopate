@@ -12,12 +12,15 @@ func main() {
     changed := false
     for {
         select {
-        case wEvent := <-events:
+        case sEvent := <-events:
             changed = true
-            newEvent := Event{Time: wEvent.Time}
+            newEvent := Event{Time: sEvent.Time}
             newEvent.Data = make(map[string]interface{})
-            newEvent.Data[wEvent.Key] = wEvent.Value
-            cluster.Series[wEvent.SeriesIndex].Events = append(cluster.Series[wEvent.SeriesIndex].Events, newEvent)
+            newEvent.Data[sEvent.Key] = sEvent.Value
+            if _, ok := cluster.Series[sEvent.SeriesID]; !ok {
+                cluster.Series[sEvent.SeriesID] = &Series{ID: sEvent.SeriesID, Events: []Event{}}
+            }
+            cluster.Series[sEvent.SeriesID].Events = append(cluster.Series[sEvent.SeriesID].Events, newEvent)
         case <-up:
             if changed {
                 Upload(cluster, cluster.ID)

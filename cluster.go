@@ -17,7 +17,6 @@ type (
 	SyncEvent struct {
 		Time        int64
 		SeriesID    string
-		SeriesIndex int
 		Key         string
 		Value       string
 	}
@@ -34,8 +33,7 @@ type (
 		ID        string
 		Group     string
 		Token     string
-		SeriesIDs []string
-		Series    []Series
+		Series    map[string]*Series
 	}
 )
 
@@ -44,18 +42,11 @@ func StartCluster(config *Config, events chan SyncEvent) *Cluster {
 		Key:   config.Key,
 		ID:    HashID(config.Key),
 		Group: config.Group,
-		Token: HashKey(config.Key)}
-	cluster.Series = make([]Series, len(config.Variables))
-	cluster.SeriesIDs = make([]string, len(config.Variables))
+		Token: HashKey(config.Key),
+        Series: make(map[string]*Series),
+    }
 
 	log.Printf(">>> STARTING CLUSTER (API: %s) (GROUP: %s) (TOKEN: %s)\n\n", cluster.Key, cluster.Group, cluster.Token)
-
-	for i, wv := range config.Variables {
-		seriesID := MakeSeriesID(cluster.Token, cluster.Group, wv.Description)
-		cluster.SeriesIDs[i] = seriesID
-		cluster.Series[i] = Series{ID: seriesID}
-		cluster.Series[i].Events = []Event{}
-	}
 
     data := make(chan string)
 	go Read(config, data)

@@ -25,7 +25,7 @@ func GetHandler(info *HandlerInfo) Handler {
     case "top":
         return NewTopHandler(info)
     default:
-        log.Fatal("No mode available.")
+        log.Fatal("ERROR: No mode specified.")
     }
 
     return nil

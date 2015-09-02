@@ -34,7 +34,6 @@ func (h *RegexHandler) Parse(data string) {
             for _, matchVal := range allMatch {
                 h.Info.Events <- SyncEvent{
                     SeriesID:    seriesID,
-                    SeriesIndex: i,
                     Key:         vars[i].Description,
                     Value:       matchVal[1],
                     Time:        time.Now().UTC().UnixNano() / int64(time.Microsecond)}

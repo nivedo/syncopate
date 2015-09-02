@@ -64,7 +64,6 @@ func (h *TopHandler) Upload() {
         seriesID := MakeSeriesID(h.Info.Cluster.Token, h.Info.Cluster.Group, k)
         h.Info.Events <- SyncEvent{
             SeriesID:    seriesID,
-            SeriesIndex: i,
             Key:         k,
             Value:       v,
             Time:        now}
