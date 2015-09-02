@@ -60,7 +60,8 @@ func startCluster(config *Config, events chan SyncEvent) *Cluster {
     data := make(chan string)
 	go read(config, data)
 
-    handler := newHandler(cluster, config, data, events)
+    handlerInfo := &HandlerInfo{Cluster: cluster, Config: config, Data: data, Events: events}
+    handler := getHandler(handlerInfo)
     go handler.run()
 
 	return cluster
