@@ -32,11 +32,9 @@ func (h *TopHandler) run() {
     for {
         data := <-h.Info.Data
         h.parse(data)
-        /*
         for k,v := range h.Map {
-            fmt.Printf("%s:%s\n",k,v)
+            fmt.Printf("%20s: %s\n",k,v)
         }
-        */
     }
 }
 
@@ -66,9 +64,15 @@ func (h *TopHandler) Upload() {
 func (h *TopHandler) ParseTable(text string) {
 }
 
-func (h *TopHandler) ResetState() {
+func (h *TopHandler) Reset() {
     h.State.InTable = false
     h.State.LineCount = 0
+
+    // NOTE: Cannot assign a new map to watchEventMap because that doesn't
+    //       change the reference in other function calls
+    for k := range h.Map {
+        delete(h.Map, k)
+    }
 }
 
 func (h *TopHandler) InitTableHeaders(line string) {
@@ -102,7 +106,7 @@ func (h *TopHandler) AddEvent(key string, value string) bool {
 func (h *TopHandler) ParseTopHeaders(line string) bool {
     valid := true
     if !h.State.InTable {
-        verbose := true //false
+        verbose := false
         line = strings.TrimSpace(line)
         line = strings.TrimRight(line, ".")
         tokens := strings.Split(line, ":")
@@ -158,14 +162,8 @@ func (h *TopHandler) ParseTopHeaders(line string) bool {
 func (h *TopHandler) ParseTopMacOSX(data string) {
     if strings.Contains(data, "Processes") {
         h.Upload()
-        h.ResetState()
+        h.Reset()
         fmt.Println(data)
-        
-        // NOTE: Cannot assign a new map to watchEventMap because that doesn't
-        //       change the reference in other function calls
-        for k := range h.Map {
-            delete(h.Map, k)
-        }
     }
 
     h.State.LineCount++
