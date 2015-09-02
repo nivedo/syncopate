@@ -11,9 +11,10 @@ import (
 type (
     WatchEventMap map[string]string
     ParseState struct {
-        InTable   bool
-        LineCount int
-        Headers   []string
+        InTable         bool
+        TableRowCount   int
+        LineCount       int
+        Headers         []string
     }
     TopHandler struct {
         Info    *HandlerInfo
@@ -24,7 +25,10 @@ type (
 
 func NewTopHandler(info *HandlerInfo) *TopHandler {
     h := &TopHandler{Info: info}
-    h.State = ParseState{InTable: false, LineCount: 0}
+    h.State = ParseState{
+        InTable: false,
+        TableRowCount: 0,
+        LineCount: 0}
     h.Map = make(WatchEventMap)
     return h
 }
@@ -33,7 +37,7 @@ func (h *TopHandler) Run() {
     for {
         data := <-h.Info.Data
         h.Parse(data)
-        h.Print()
+        // h.Print()
     }
 }
 
@@ -81,6 +85,7 @@ func (h *TopHandler) Upload() {
 func (h *TopHandler) Reset() {
     h.State.InTable = false
     h.State.LineCount = 0
+    h.State.TableRowCount = 0
 
     // NOTE: Cannot assign a new map to watchEventMap because that doesn't
     //       change the reference in other function calls
@@ -112,6 +117,24 @@ func (h *TopHandler) ParseTableHeaders(line string) {
         h.State.InTable = true
         h.InitTableHeaders(line)
         fmt.Println(strings.Join(h.State.Headers, ", "), len(h.State.Headers))
+    }
+}
+
+func (h *TopHandler) ParseTable(line string) {
+    if h.State.InTable {
+        tokens := strings.Fields(line)
+        if len(tokens) == len(h.State.Headers) {
+            for i, v := range tokens {
+                k := fmt.Sprintf("table_r%d_c%d", h.State.TableRowCount, i)
+                // fmt.Printf("%20s: %s\n", k, v)
+                h.AddEvent(k, v)
+            }
+            h.State.TableRowCount++
+        } else {
+            fmt.Printf("ERROR: Number of columns mismatch, #headers: %d, #columns: %d\n",
+                len(h.State.Headers), len(tokens))
+            fmt.Println(line)
+        }
     }
 }
 
@@ -181,7 +204,8 @@ func (h *TopHandler) ParseTopHeaders(line string) bool {
 
 func (h *TopHandler) ParseTopMacOSX(data string) {
     if strings.Contains(data, "Processes") {
-        h.Upload()
+        // TODO: Get rid of series index for upload to work
+        // h.Upload()
         h.Reset()
         fmt.Println(data)
     }
@@ -189,6 +213,7 @@ func (h *TopHandler) ParseTopMacOSX(data string) {
     h.State.LineCount++
     h.ParseTopHeaders(data)
     h.ParseTableHeaders(data)
+    h.ParseTable(data)
 
     if !h.State.InTable {
         fmt.Println(data)
