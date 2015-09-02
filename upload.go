@@ -17,7 +17,7 @@ const (
     SERVER_URL = "http://api.blub.io:32794"
 )
 
-func upload(cluster *Cluster, key string) {
+func Upload(cluster *Cluster, key string) {
     url := fmt.Sprintf("%s/clusters/%s", SERVER_URL, key)
     log.Println("[UPLOAD] URL:>", url)
 
@@ -44,25 +44,25 @@ func upload(cluster *Cluster, key string) {
     }
 }
 
-func hashID(text string) string {
+func HashID(text string) string {
     h := md5.New()
     h.Write([]byte(SALT_ID + text))
     return hex.EncodeToString(h.Sum(nil)[0:12])
 }
 
-func hashKey(text string) string {
+func HashKey(text string) string {
     h := md5.New()
     h.Write([]byte(SALT_KEY + text))
     return hex.EncodeToString(h.Sum(nil)[0:6])
 }
 
-func makeSeriesID(token string, group string, desc string) string {
+func MakeSeriesID(token string, group string, desc string) string {
     strID := fmt.Sprintf("%s.%s.%s", token, group, desc)
-    hid := hashID(strID)
+    hid := HashID(strID)
     return hid
 }
 
-func uploadHelper(up chan bool) {
+func UploadHelper(up chan bool) {
     for {
         time.Sleep(time.Second * 1)
         up <- true

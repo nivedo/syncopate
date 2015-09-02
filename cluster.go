@@ -39,35 +39,35 @@ type (
 	}
 )
 
-func startCluster(config *Config, events chan SyncEvent) *Cluster {
+func StartCluster(config *Config, events chan SyncEvent) *Cluster {
 	cluster := &Cluster{
 		Key:   config.Key,
-		ID:    hashID(config.Key),
+		ID:    HashID(config.Key),
 		Group: config.Group,
-		Token: hashKey(config.Key)}
+		Token: HashKey(config.Key)}
 	cluster.Series = make([]Series, len(config.Variables))
 	cluster.SeriesIDs = make([]string, len(config.Variables))
 
 	log.Printf(">>> STARTING CLUSTER (API: %s) (GROUP: %s) (TOKEN: %s)\n\n", cluster.Key, cluster.Group, cluster.Token)
 
 	for i, wv := range config.Variables {
-		seriesID := makeSeriesID(cluster.Token, cluster.Group, wv.Description)
+		seriesID := MakeSeriesID(cluster.Token, cluster.Group, wv.Description)
 		cluster.SeriesIDs[i] = seriesID
 		cluster.Series[i] = Series{ID: seriesID}
 		cluster.Series[i].Events = []Event{}
 	}
 
     data := make(chan string)
-	go read(config, data)
+	go Read(config, data)
 
     handlerInfo := &HandlerInfo{Cluster: cluster, Config: config, Data: data, Events: events}
-    handler := getHandler(handlerInfo)
-    go handler.run()
+    handler := GetHandler(handlerInfo)
+    go handler.Run()
 
 	return cluster
 }
 
-func read(cfg *Config, data chan string) {
+func Read(cfg *Config, data chan string) {
     for _,v := range cfg.Variables {
 	   log.Printf("[TRACKING] Variables: %s\n", v.Description)
     }

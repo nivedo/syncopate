@@ -1,7 +1,7 @@
 ---
 key: YOUR_API_KEY
 group: testgroup
-mode: top
+mode: regex
 variables:
   - pattern: "(\\d+) threads"
     description: "num_threads"

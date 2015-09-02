@@ -2,6 +2,7 @@ package main
 
 import (
     "log"
+    "flag"
     "io/ioutil"
     "gopkg.in/yaml.v2"
 )
@@ -12,12 +13,15 @@ type (
         Group     string
         Variables []Variable
         Mode      string
+        Help      bool
     }
 )
 
-func loadConfig() *Config {
-    config := &Config{}
-    source, err := ioutil.ReadFile("syncopate.yaml")
+func LoadConfig() *Config {
+    config := &Config{Help: false}
+
+    configFile := flag.String("c", "syncopate.yaml", "config")
+    source, err := ioutil.ReadFile(*configFile)
     if err != nil {
         log.Fatal("Could not locate syncopate.yaml. Terminating...")
     }

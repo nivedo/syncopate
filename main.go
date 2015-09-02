@@ -1,13 +1,13 @@
 package main
 
 func main() {
-    config := loadConfig()
+    config := LoadConfig()
 
     events := make(chan SyncEvent, 1)
-    cluster := startCluster(config, events)
+    cluster := StartCluster(config, events)
 
     up := make(chan bool, 1)
-    go uploadHelper(up)
+    go UploadHelper(up)
 
     changed := false
     for {
@@ -20,7 +20,7 @@ func main() {
             cluster.Series[wEvent.SeriesIndex].Events = append(cluster.Series[wEvent.SeriesIndex].Events, newEvent)
         case <-up:
             if changed {
-                upload(cluster, cluster.ID)
+                Upload(cluster, cluster.ID)
                 changed = false
             }
         }

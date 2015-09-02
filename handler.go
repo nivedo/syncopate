@@ -6,9 +6,9 @@ import (
 
 type (
     Handler interface {
-        parse(data string)
-        run()
-        help()
+        Parse(data string)
+        Run()
+        Help()
     }
     HandlerInfo struct {
         Cluster     *Cluster
@@ -18,7 +18,7 @@ type (
     }
 )
 
-func getHandler(info *HandlerInfo) Handler {
+func GetHandler(info *HandlerInfo) Handler {
     switch info.Config.Mode {
     case "regex":
         return NewRegexHandler(info)

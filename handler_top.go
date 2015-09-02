@@ -28,19 +28,19 @@ func NewTopHandler(info *HandlerInfo) *TopHandler {
     return h
 }
 
-func (h *TopHandler) run() {
+func (h *TopHandler) Run() {
     for {
         data := <-h.Info.Data
-        h.parse(data)
+        h.Parse(data)
         h.Print()
     }
 }
 
-func (h *TopHandler) parse(data string) {
+func (h *TopHandler) Parse(data string) {
     h.ParseTopMacOSX(data)
 }
 
-func (h *TopHandler) help() {
+func (h *TopHandler) Help() {
     // TODO: list all variables
 }
 
