@@ -32,9 +32,7 @@ func (h *TopHandler) run() {
     for {
         data := <-h.Info.Data
         h.parse(data)
-        for k,v := range h.Map {
-            fmt.Printf("%20s: %s\n",k,v)
-        }
+        h.Print()
     }
 }
 
@@ -72,6 +70,12 @@ func (h *TopHandler) Reset() {
     //       change the reference in other function calls
     for k := range h.Map {
         delete(h.Map, k)
+    }
+}
+
+func (h *TopHandler) Print() {
+    for k,v := range h.Map {
+        fmt.Printf("%20s: %s\n",k,v)
     }
 }
 
