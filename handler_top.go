@@ -187,13 +187,5 @@ func (h *TopHandler) ParseTopMacOSX(data string) {
     if !h.State.InTable {
         fmt.Println(data)
     }
-
-    verbose := false
-    if verbose {
-        fmt.Println(">>>>>>>>>>>>>>>")
-        fmt.Println("parse")
-        fmt.Println(data)
-        fmt.Println()
-    }
 }
 
