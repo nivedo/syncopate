@@ -39,8 +39,8 @@ type (
 	}
 )
 
-func startCluster(config Config, events chan SyncEvent) Cluster {
-	cluster := Cluster{
+func startCluster(config *Config, events chan SyncEvent) *Cluster {
+	cluster := &Cluster{
 		Key:   config.Key,
 		ID:    hashID(config.Key),
 		Group: config.Group,
@@ -60,13 +60,13 @@ func startCluster(config Config, events chan SyncEvent) Cluster {
     data := make(chan string)
 	go read(config, data)
 
-    handler := newHandler(&cluster, &config, data, events)
+    handler := newHandler(cluster, config, data, events)
     go handler.run()
 
 	return cluster
 }
 
-func read(cfg Config, data chan string) {
+func read(cfg *Config, data chan string) {
     for _,v := range cfg.Variables {
 	   log.Printf("[TRACKING] Variables: %s\n", v.Description)
     }

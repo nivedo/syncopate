@@ -15,13 +15,13 @@ type (
     }
 )
 
-func loadConfig() Config {
-    var config Config
+func loadConfig() *Config {
+    config := &Config{}
     source, err := ioutil.ReadFile("syncopate.yaml")
     if err != nil {
         log.Fatal("Could not locate syncopate.yaml. Terminating...")
     }
-    err = yaml.Unmarshal(source, &config)
+    err = yaml.Unmarshal(source, config)
     if err != nil {
         log.Fatal(err)
     }

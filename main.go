@@ -2,24 +2,27 @@ package main
 
 func main() {
     config := loadConfig()
-    events := make(chan SyncEvent, 1)
 
+    events := make(chan SyncEvent, 1)
     cluster := startCluster(config, events)
-    go uploadHelper(events)
+
+    up := make(chan bool, 1)
+    go uploadHelper(up)
 
     changed := false
     for {
-        wEvent := <-events
-        if wEvent.SeriesIndex >= 0 {
+        select {
+        case wEvent := <-events:
             changed = true
             newEvent := Event{Time: wEvent.Time}
             newEvent.Data = make(map[string]interface{})
             newEvent.Data[wEvent.Key] = wEvent.Value
             cluster.Series[wEvent.SeriesIndex].Events = append(cluster.Series[wEvent.SeriesIndex].Events, newEvent)
-        }
-        if changed && wEvent.SeriesIndex < 0 {
-            upload(&cluster, cluster.ID)
-            changed = false
+        case <-up:
+            if changed {
+                upload(cluster, cluster.ID)
+                changed = false
+            }
         }
     }
 }
