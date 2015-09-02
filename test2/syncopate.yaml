@@ -2,14 +2,14 @@
 key: YOUR_API_KEY
 group: testgroup
 mode: top
-variables:
+fields:
   - pattern: "(\\d+) threads"
-    description: "num_threads"
+    desc: "num_threads"
   - pattern: "CPU usage: (\\d*\\.?\\d*)%"
-    description: "cpu_usage"
+    desc: "cpu_usage"
   - pattern: "AAPL PRICE: (\\d*\\.?\\d*)"
-    description: "aapl_price"
+    desc: "aapl_price"
   - pattern: "TEMP: (\\d+)"
-    description: "t1000_temp"
+    desc: "t1000_temp"
   - pattern: "LOAD: (\\d+)"
-    description: "t1000_load"
+    desc: "t1000_load"

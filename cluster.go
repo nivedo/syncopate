@@ -8,12 +8,6 @@ import (
 )
 
 type (
-	Variable struct {
-		Pattern     string
-		Description string
-		Min         int
-		Max         int
-	}
 	SyncEvent struct {
 		Time        int64
 		SeriesID    string
@@ -59,10 +53,6 @@ func StartCluster(config *Config, events chan SyncEvent) *Cluster {
 }
 
 func Read(cfg *Config, data chan string) {
-    for _,v := range cfg.Variables {
-	   log.Printf("[TRACKING] Variables: %s\n", v.Description)
-    }
-
 	r := bufio.NewReader(os.Stdin)
 
 	for {

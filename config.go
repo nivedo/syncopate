@@ -13,8 +13,7 @@ type (
     Config struct {
         Key       string
         Group     string
-        Variables []Variable
-        Matches   map[string]bool
+        Fields    []map[string]string
         Mode      string
         Help      bool
         Debug     bool
@@ -34,10 +33,8 @@ func LoadConfig() *Config {
 
     // 2nd Priority: YAML Config
     source, err := ioutil.ReadFile(*configFile)
-    hasConfig := true
     if err != nil {
         log.Printf("Could not locate %s. Running without config...",*configFile)
-        hasConfig = false
     }
     err = yaml.Unmarshal(source, config)
     if err != nil {
@@ -61,10 +58,6 @@ func LoadConfig() *Config {
         config.Debug = true
     }
 
-    if !hasConfig {
-        LoadDefault(config)
-    }
-
     // Check if config is legal
     if !config.ok() {
         log.Fatalf("Illegal Config: %+v", config)
@@ -78,27 +71,4 @@ func LoadConfig() *Config {
 func (c *Config) ok() bool {
     return c.Key != "" && c.Group != "" && c.Mode != "";
 }
-
-func LoadDefault(config *Config) {
-    switch config.Mode {
-    case "top":
-        LoadDefaultTop(config)
-    default:
-    }
-}
-
-func LoadDefaultTop(config *Config) {
-    defaults := []string{
-        "cpu_usage_user",
-        "cpu_usage_sys",
-        "cpu_usage_idle"}
-    config.Matches = make(map[string]bool)
-    for _, s := range defaults {
-        config.Matches[s] = true
-        config.Variables = append(config.Variables, Variable{
-            Pattern: s,
-            Description: s})
-    }
-}
-
 

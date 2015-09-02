@@ -4,16 +4,31 @@ import (
     "regexp"
     "time"
     "fmt"
+    "log"
 )
 
 type (
     RegexHandler struct {
-        Info *HandlerInfo
+        Info     *HandlerInfo
+        Fields   []RegexField
+    }
+    RegexField struct {
+        Pattern     string
+        Description string
     }
 )
 
 func NewRegexHandler(info *HandlerInfo) *RegexHandler {
-    return &RegexHandler{Info :info}
+    h := &RegexHandler{Info :info}
+    h.Load()
+    return h
+}
+
+func (h *RegexHandler) Load() {
+    for _,v := range h.Info.Config.Fields {
+        h.Fields = append(h.Fields, RegexField{Pattern: v["pattern"], Description: v["desc"]})
+        log.Printf("[TRACKING] Field: %s\n", v["desc"])
+    }
 }
 
 func (h *RegexHandler) Run() {
@@ -24,7 +39,7 @@ func (h *RegexHandler) Run() {
 }
 
 func (h *RegexHandler) Parse(data string) {
-    vars := h.Info.Config.Variables
+    vars := h.Fields
     for i, _ := range vars {
         match, _ := regexp.MatchString(vars[i].Pattern, data)
         if match {

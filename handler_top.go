@@ -1,6 +1,7 @@
 package main
 
 import (
+    "log"
     "fmt"
     "regexp"
     "strings"
@@ -17,9 +18,10 @@ type (
         Headers         []string
     }
     TopHandler struct {
-        Info    *HandlerInfo
-        Map     WatchEventMap
-        State   ParseState
+        Info      *HandlerInfo
+        Map       WatchEventMap
+        State     ParseState
+        Matches   map[string]bool
     }
 )
 
@@ -30,7 +32,31 @@ func NewTopHandler(info *HandlerInfo) *TopHandler {
         TableRowCount: 0,
         LineCount: 0}
     h.Map = make(WatchEventMap)
+    h.Load()
     return h
+}
+
+func (h *TopHandler) Load() {
+    defaults := []string{
+        "cpu_usage_user",
+        "cpu_usage_sys",
+        "cpu_usage_idle"}
+    h.Matches = make(map[string]bool)
+    cFields := h.Info.Config.Fields
+
+    if len(cFields) == 0 {
+        for _, s := range defaults {
+            h.Matches[s] = true
+        }
+    } else {
+        for _, v := range cFields {
+            h.Matches[v["desc"]] = true
+        }
+    }
+
+    for k,_ := range h.Matches {
+        log.Printf("[TRACKING] Field: %s\n", k)
+    }
 }
 
 func (h *TopHandler) Run() {
@@ -48,7 +74,7 @@ func (h *TopHandler) Parse(data string) {
 func (h *TopHandler) Help() {
     // List all variables
     keys := make([]string, 0, len(h.Map))
-    for k := range h.Info.Config.Matches {
+    for k := range h.Matches {
         keys = append(keys, k)
     }
 
@@ -92,14 +118,12 @@ func ConvertToValidSeriesKey(rawId string) string {
 func (h *TopHandler) Upload() {
     now := time.Now().UTC().UnixNano() / int64(time.Microsecond)
     for k, v := range h.Map {
-        if h.Info.Config.Matches[k] {
-            seriesID := MakeSeriesID(h.Info.Cluster.Token, h.Info.Cluster.Group, k)
-            h.Info.Events <- SyncEvent{
-                SeriesID:    seriesID,
-                Key:         k,
-                Value:       ConvertToUnit(v),
-                Time:        now}
-        }
+        seriesID := MakeSeriesID(h.Info.Cluster.Token, h.Info.Cluster.Group, k)
+        h.Info.Events <- SyncEvent{
+            SeriesID:    seriesID,
+            Key:         k,
+            Value:       ConvertToUnit(v),
+            Time:        now}
     }
 }
 
@@ -161,7 +185,7 @@ func (h *TopHandler) ParseTable(line string) {
 
 func (h *TopHandler) AddEvent(key string, value string) bool {
     valid := len(key) > 0 && len(value) > 0
-    if valid {
+    if valid && h.Matches[key] {
         h.Map[key] = value
     }
     return valid

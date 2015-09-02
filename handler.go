@@ -6,8 +6,9 @@ import (
 
 type (
     Handler interface {
-        Parse(data string)
+        Load()
         Run()
+        Parse(data string)
         Help()
     }
     HandlerInfo struct {
