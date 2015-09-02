@@ -115,7 +115,7 @@ func (h *TopHandler) ParseTableHeaders(line string) {
     if len(lineTrim) > 0 && line == strings.ToUpper(lineTrim) && hasAlpha {
         h.State.InTable = true
         h.InitTableHeaders(line)
-        fmt.Println(strings.Join(h.State.Headers, ", "), len(h.State.Headers))
+        // fmt.Println(strings.Join(h.State.Headers, ", "), len(h.State.Headers))
     }
 }
 
@@ -205,16 +205,18 @@ func (h *TopHandler) ParseTopMacOSX(data string) {
     if strings.Contains(data, "Processes") {
         h.Upload()
         h.Reset()
-        fmt.Println(data)
+        // fmt.Println(data)
     }
 
     h.State.LineCount++
     h.ParseTopHeaders(data)
     h.ParseTableHeaders(data)
     // h.ParseTable(data)
-
+    
+    /*
     if !h.State.InTable {
         fmt.Println(data)
     }
+    */
 }
 
