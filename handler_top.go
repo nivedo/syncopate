@@ -48,11 +48,20 @@ func (h *TopHandler) Parse(data string) {
 func (h *TopHandler) Help() {
     // List all variables
     keys := make([]string, 0, len(h.Map))
+    for k := range h.Info.Config.Matches {
+        keys = append(keys, k)
+    }
+
+    fmt.Println("top handler help --")
+    fmt.Printf("%20s: %s", "variables", strings.Join(keys, ", "))
+    /*
+    keys := make([]string, 0, len(h.Map))
     for k := range h.Map {
         keys = append(keys, k)
     }
     fmt.Println("top handler help --")
     fmt.Printf("%20s: %s", "variables", strings.Join(keys, ", "))
+    */
 }
 
 func ConvertToValidSeriesKey(rawId string) string {

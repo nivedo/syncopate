@@ -90,6 +90,9 @@ func LoadDefaultTop(config *Config) {
     config.Matches = make(map[string]bool)
     for _, s := range defaults {
         config.Matches[s] = true
+        config.Variables = append(config.Variables, Variable{
+            Pattern: s,
+            Description: s})
     }
 }
 
