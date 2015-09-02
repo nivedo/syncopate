@@ -3,6 +3,7 @@ package main
 import (
     "log"
     "flag"
+    "os"
     "io/ioutil"
     "gopkg.in/yaml.v2"
 )
@@ -18,10 +19,16 @@ type (
 )
 
 func LoadConfig() *Config {
-    config := &Config{Help: false}
+    config := &Config{Help: false, Key: os.Getenv("SYNCOPATE_KEY"), Group: os.Getenv("SYNCOPATE_GROUP")}
+
+    configFile := flag.String("c", "syncopate.yaml", "Syncopate YAML config")
+    key := flag.String("k", "", "API Key")
+    group := flag.String("g", "", "Group Name")
+    mode := flag.String("m", "", "Mode: (Regex, CSV, ...)")
+    help := flag.Bool("help", false, "Show Mode Usage")
+    flag.Parse()
 
     // 2nd Priority: YAML Config
-    configFile := flag.String("c", "syncopate.yaml", "config")
     source, err := ioutil.ReadFile(*configFile)
     if err != nil {
         log.Printf("Could not locate %s. Running without config...",*configFile)
@@ -32,10 +39,24 @@ func LoadConfig() *Config {
     }
 
     // 1st Priority: Command Line
-    
+    if *key != "" {
+        config.Key = *key
+    }
+    if *group != "" {
+        config.Group = *group
+    }
+    if *mode != "" {
+        config.Mode = *mode
+    }
+    if *help {
+        config.Help = true
+    }
 
+    // Check if config is legal
     if !config.ok() {
         log.Fatalf("Illegal Config: %+v", config)
+    } else {
+        log.Printf("Running Syncopate with config: %+v", config)
     }
 
     return config
