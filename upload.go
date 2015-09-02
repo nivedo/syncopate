@@ -20,14 +20,18 @@ const (
 
 func Upload(cluster *Cluster, config *Config) {
     url := fmt.Sprintf("%s/clusters/%s", SERVER_URL, cluster.ID)
-    log.Println("[UPLOAD] URL:>", url)
+    if config.Debug {
+        log.Println("[UPLOAD] URL:>", url)
+    }
 
     cjson, err := json.Marshal(cluster)
     if err != nil {
         log.Fatal(err)
     }
-
-    log.Println(string(cjson))
+    
+    if config.Debug {
+        log.Println(string(cjson))
+    }
 
     req, err := http.NewRequest("POST", url, bytes.NewBuffer(cjson))
     req.Header.Set("X-Custom-Header", "myvalue")
