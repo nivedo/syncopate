@@ -64,6 +64,19 @@ func (h *TopHandler) Help() {
     */
 }
 
+func TrimSuffix(s, suffix string) string {
+    if strings.HasSuffix(s, suffix) {
+        s = s[:len(s)-len(suffix)]
+    }
+    return s
+}
+
+func ConvertToUnit(value string) string{
+    // Get rid of %
+    newValue := TrimSuffix(value, "%")
+    return newValue
+}
+
 func ConvertToValidSeriesKey(rawId string) string {
     // Convert #, %
     newId := strings.Replace(rawId, "#", "num_", -1)
@@ -84,7 +97,7 @@ func (h *TopHandler) Upload() {
             h.Info.Events <- SyncEvent{
                 SeriesID:    seriesID,
                 Key:         k,
-                Value:       v,
+                Value:       ConvertToUnit(v),
                 Time:        now}
         }
     }
