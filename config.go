@@ -14,6 +14,7 @@ type (
         Key       string
         Group     string
         Variables []Variable
+        Matches   map[string]bool
         Mode      string
         Help      bool
     }
@@ -86,10 +87,9 @@ func LoadDefaultTop(config *Config) {
         "cpu_usage_user",
         "cpu_usage_sys",
         "cpu_usage_idle"}
+    config.Matches = make(map[string]bool)
     for _, s := range defaults {
-        config.Variables = append(config.Variables, Variable{
-            Pattern: s,
-            Description: s})
+        config.Matches[s] = true
     }
 }
 

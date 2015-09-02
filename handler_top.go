@@ -68,16 +68,16 @@ func ConvertToValidSeriesKey(rawId string) string {
 }
 
 func (h *TopHandler) Upload() {
-    i := 0
     now := time.Now().UTC().UnixNano() / int64(time.Microsecond)
     for k, v := range h.Map {
-        seriesID := MakeSeriesID(h.Info.Cluster.Token, h.Info.Cluster.Group, k)
-        h.Info.Events <- SyncEvent{
-            SeriesID:    seriesID,
-            Key:         k,
-            Value:       v,
-            Time:        now}
-       i++
+        if h.Info.Config.Matches[k] {
+            seriesID := MakeSeriesID(h.Info.Cluster.Token, h.Info.Cluster.Group, k)
+            h.Info.Events <- SyncEvent{
+                SeriesID:    seriesID,
+                Key:         k,
+                Value:       v,
+                Time:        now}
+        }
     }
 }
 
