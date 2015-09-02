@@ -31,6 +31,6 @@ func main() {
                 panic(err)
             }
         }
-        time.Sleep(time.Duration(rand.Intn(2e8)))
+        time.Sleep(time.Duration(rand.Intn(1e9)))
     }
 }

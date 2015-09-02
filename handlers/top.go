@@ -1,10 +1,10 @@
-package main //helpers
+package main
 
 import (
     "bufio"
     "fmt"
-    "io"
-    "log"
+    //"io"
+    //"log"
     "os"
     "regexp"
     "strings"
@@ -167,13 +167,14 @@ func ParseTopMacOSX(state *ParseState, text string, watchEventMap WatchEventMap)
 }
 
 func ReadStdin() {
-    nBytes, nChunks := int64(0), int64(0)
+    //nBytes, nChunks := int64(0), int64(0)
     parseState := &ParseState{InTable: false, LineCount: 0}
     r := bufio.NewReader(os.Stdin)
-    buf := make([]byte, 0, 4*1024)
+    //buf := make([]byte, 0, 4*1024)
     watchEventMap := make(WatchEventMap)
     for {
         // n is the number of bytes read
+        /*
         n, err := r.Read(buf[:cap(buf)])
         buf = buf[:n]
         if n == 0 {
@@ -188,6 +189,8 @@ func ReadStdin() {
         nChunks++
         nBytes += int64(len(buf))
         line := string(buf)
+        */
+        line,_ := r.ReadString('\n')
         // fmt.Println(line)
         ParseTopMacOSX(parseState, line, watchEventMap)
     }

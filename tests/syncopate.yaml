@@ -1,14 +1,15 @@
 ---
 key: YOUR_API_KEY
 group: testgroup
-data:
-  - filename: test1000.log
-    variables:
-      - pattern: "TEMP: (\\d+)"
-        description: "t1000_temp"
-      - pattern: "LOAD: (\\d+)"
-        description: "t1000_load"
-  - filename: test1001.log
-    variables:
-      - pattern: "AAPL PRICE: (\\d*\\.?\\d*)"
-        description: "aapl_price"
+mode: regex
+variables:
+  - pattern: "(\\d+) threads"
+    description: "num_threads"
+  - pattern: "CPU usage: (\\d*\\.?\\d*)%"
+    description: "cpu_usage"
+  - pattern: "AAPL PRICE: (\\d*\\.?\\d*)"
+    description: "aapl_price"
+  - pattern: "TEMP: (\\d+)"
+    description: "t1000_temp"
+  - pattern: "LOAD: (\\d+)"
+    description: "t1000_load"

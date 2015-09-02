@@ -10,8 +10,8 @@ type (
     Config struct {
         Key       string
         Group     string
-        Data      []WatchFile
-        NumSeries int
+        Variables []WatchVar
+        Mode      string
     }
 )
 
@@ -24,9 +24,6 @@ func loadConfig() Config {
     err = yaml.Unmarshal(source, &config)
     if err != nil {
         log.Fatal(err)
-    }
-    for _,wf := range config.Data {
-        config.NumSeries += len(wf.Variables)
     }
 
     return config
