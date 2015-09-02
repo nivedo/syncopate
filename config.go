@@ -17,6 +17,7 @@ type (
         Matches   map[string]bool
         Mode      string
         Help      bool
+        Debug     bool
     }
 )
 
@@ -24,10 +25,11 @@ func LoadConfig() *Config {
     config := &Config{Help: false, Key: os.Getenv("SYNCOPATE_KEY"), Group: os.Getenv("SYNCOPATE_GROUP")}
 
     configFile := flag.String("c", "syncopate.yaml", "Syncopate YAML config")
-    key := flag.String("k", "", "API Key")
-    group := flag.String("g", "", "Group Name")
-    mode := flag.String("m", "", "Mode: (Regex, CSV, ...)")
-    help := flag.Bool("help", false, "Show Mode Usage")
+    key     := flag.String("k", "", "API key")
+    group   := flag.String("g", "", "Group name")
+    mode    := flag.String("m", "", "Mode: (regex, csv, ...)")
+    help    := flag.Bool("help", false, "Show mode usage")
+    debug   := flag.Bool("debug", false, "Debug output")
     flag.Parse()
 
     // 2nd Priority: YAML Config
@@ -54,6 +56,9 @@ func LoadConfig() *Config {
     }
     if *help {
         config.Help = true
+    }
+    if *debug {
+        config.Debug = true
     }
 
     if !hasConfig {

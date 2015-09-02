@@ -18,8 +18,8 @@ const (
     SERVER_URL = "http://api.blub.io:32818"
 )
 
-func Upload(cluster *Cluster, key string) {
-    url := fmt.Sprintf("%s/clusters/%s", SERVER_URL, key)
+func Upload(cluster *Cluster, config *Config) {
+    url := fmt.Sprintf("%s/clusters/%s", SERVER_URL, cluster.ID)
     log.Println("[UPLOAD] URL:>", url)
 
     cjson, err := json.Marshal(cluster)

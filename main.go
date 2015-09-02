@@ -23,7 +23,7 @@ func main() {
             cluster.Series[sEvent.SeriesID].Events = append(cluster.Series[sEvent.SeriesID].Events, newEvent)
         case <-up:
             if changed {
-                Upload(cluster, cluster.ID)
+                Upload(cluster, config)
                 changed = false
             }
         }
