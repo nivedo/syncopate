@@ -5,6 +5,7 @@ import (
     "regexp"
     "strings"
     "strconv"
+    "time"
 )
 
 type (
@@ -57,9 +58,18 @@ func ConvertToValidSeriesKey(rawId string) string {
 }
 
 func (h *TopHandler) Upload() {
-}
-
-func (h *TopHandler) ParseTable(text string) {
+    i := 0
+    now := time.Now().UTC().UnixNano() / int64(time.Microsecond)
+    for k, v := range h.Map {
+        seriesID := MakeSeriesID(h.Info.Cluster.Token, h.Info.Cluster.Group, k)
+        h.Info.Events <- SyncEvent{
+            SeriesID:    seriesID,
+            SeriesIndex: i,
+            Key:         k,
+            Value:       v,
+            Time:        now}
+       i++
+    }
 }
 
 func (h *TopHandler) Reset() {
@@ -184,7 +194,6 @@ func (h *TopHandler) ParseTopMacOSX(data string) {
         fmt.Println("parse")
         fmt.Println(data)
         fmt.Println()
-        h.ParseTable(data)
     }
 }
 
