@@ -50,12 +50,12 @@ func (h *TopHandler) help() {
 
 func ConvertToValidSeriesKey(rawId string) string {
     // Convert #, %
-    newId := strings.Replace(rawId, "#", "n", -1)
-    newId = strings.Replace(newId, "%", "p", -1)
+    newId := strings.Replace(rawId, "#", "num_", -1)
+    newId = strings.Replace(newId, "%", "pct_", -1)
 
     // Conver space to _
     newId = strings.Replace(newId, " ", "_", -1)
-    // newId = strings.ToLower(newId)
+    newId = strings.ToLower(newId)
 
     return newId
 }
