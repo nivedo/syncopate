@@ -203,8 +203,7 @@ func (h *TopHandler) ParseTopHeaders(line string) bool {
 
 func (h *TopHandler) ParseTopMacOSX(data string) {
     if strings.Contains(data, "Processes") {
-        // TODO: Get rid of series index for upload to work
-        // h.Upload()
+        h.Upload()
         h.Reset()
         fmt.Println(data)
     }
@@ -212,7 +211,7 @@ func (h *TopHandler) ParseTopMacOSX(data string) {
     h.State.LineCount++
     h.ParseTopHeaders(data)
     h.ParseTableHeaders(data)
-    h.ParseTable(data)
+    // h.ParseTable(data)
 
     if !h.State.InTable {
         fmt.Println(data)
