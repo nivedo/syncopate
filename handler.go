@@ -15,8 +15,16 @@ type (
     }
 )
 
-func newHandler(c *Cluster, cfg *Config, data chan string, events chan SyncEvent) *Handler {
-    return &Handler{Cluster: c, Config: cfg, Data: data, Events: events}
+func newHandler(
+    c *Cluster,
+    cfg *Config,
+    data chan string,
+    events chan SyncEvent) *Handler {
+    return &Handler{
+        Cluster: c,
+        Config: cfg,
+        Data: data,
+        Events: events}
 }
 
 func (h *Handler) run() {
