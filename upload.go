@@ -62,9 +62,9 @@ func makeSeriesID(token string, group string, desc string) string {
     return hid
 }
 
-func uploadHelper(events chan WatchEvent) {
+func uploadHelper(events chan SyncEvent) {
     for {
         time.Sleep(time.Second * 1)
-        events <- WatchEvent{SeriesIndex: -1}
+        events <- SyncEvent{SeriesIndex: -1}
     }
 }

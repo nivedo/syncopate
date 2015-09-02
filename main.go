@@ -2,7 +2,7 @@ package main
 
 func main() {
     config := loadConfig()
-    events := make(chan WatchEvent, 1)
+    events := make(chan SyncEvent, 1)
 
     cluster := startCluster(config, events)
     go uploadHelper(events)

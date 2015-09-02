@@ -8,13 +8,13 @@ import (
 )
 
 type (
-	WatchVar struct {
+	Variable struct {
 		Pattern     string
 		Description string
 		Min         int
 		Max         int
 	}
-	WatchEvent struct {
+	SyncEvent struct {
 		Time        int64
 		SeriesID    string
 		SeriesIndex int
@@ -39,7 +39,7 @@ type (
 	}
 )
 
-func startCluster(config Config, events chan WatchEvent) Cluster {
+func startCluster(config Config, events chan SyncEvent) Cluster {
 	cluster := Cluster{
 		Key:   config.Key,
 		ID:    hashID(config.Key),

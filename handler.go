@@ -11,11 +11,11 @@ type (
         Cluster     *Cluster
         Config      *Config
         Data        chan string
-        Events      chan WatchEvent
+        Events      chan SyncEvent
     }
 )
 
-func newHandler(c *Cluster, cfg *Config, data chan string, events chan WatchEvent) *Handler {
+func newHandler(c *Cluster, cfg *Config, data chan string, events chan SyncEvent) *Handler {
     return &Handler{Cluster: c, Config: cfg, Data: data, Events: events}
 }
 
@@ -46,7 +46,7 @@ func (h *Handler) regex(data string) {
             seriesID := makeSeriesID(h.Cluster.Token, h.Cluster.Group, vars[i].Description)
             allMatch := r.FindAllStringSubmatch(data, -1)
             for _, matchVal := range allMatch {
-                h.Events <- WatchEvent{
+                h.Events <- SyncEvent{
                     SeriesID:    seriesID,
                     SeriesIndex: i,
                     Key:         vars[i].Description,

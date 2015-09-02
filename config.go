@@ -10,7 +10,7 @@ type (
     Config struct {
         Key       string
         Group     string
-        Variables []WatchVar
+        Variables []Variable
         Mode      string
     }
 )
