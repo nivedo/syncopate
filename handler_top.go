@@ -32,9 +32,11 @@ func (h *TopHandler) run() {
     for {
         data := <-h.Info.Data
         h.parse(data)
+        /*
         for k,v := range h.Map {
             fmt.Printf("%s:%s\n",k,v)
         }
+        */
     }
 }
 
@@ -53,7 +55,7 @@ func ConvertToValidSeriesKey(rawId string) string {
 
     // Conver space to _
     newId = strings.Replace(newId, " ", "_", -1)
-    newId = strings.ToLower(newId)
+    // newId = strings.ToLower(newId)
 
     return newId
 }
@@ -100,7 +102,8 @@ func (h *TopHandler) AddEvent(key string, value string) bool {
 func (h *TopHandler) ParseTopHeaders(line string) bool {
     valid := true
     if !h.State.InTable {
-        verbose := false
+        verbose := true //false
+        line = strings.TrimSpace(line)
         line = strings.TrimRight(line, ".")
         tokens := strings.Split(line, ":")
 
