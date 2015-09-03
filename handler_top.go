@@ -108,6 +108,34 @@ func TrimSuffix(s, suffix string) string {
 func ConvertToUnit(value string) string{
     // Get rid of %
     newValue := TrimSuffix(value, "%")
+   
+    // Convert unit
+    reg, _ := regexp.Compile("^[0-9]+([,.][0-9]+)?(B|K|M|G|T)$")
+    if reg.Match([]byte(newValue)) {
+        num, err := strconv.ParseFloat(newValue[:len(newValue)-1], 64)
+        if err == nil {
+            var factor float64 = 1
+            switch newValue[len(newValue)-1:] {
+            case "B":
+                break
+            case "K":
+                factor = 1000
+                break
+            case "M":
+                factor = 1000000
+                break
+            case "G":
+                factor = 1000000000
+                break
+            case "T":
+                factor = 1000000000000
+                break
+            default:
+                break
+            }
+            newValue = strconv.Itoa(int(num * factor))
+        }
+    }
     return newValue
 }
 
