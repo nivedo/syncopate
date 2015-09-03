@@ -6,7 +6,6 @@ import (
     "regexp"
     "strings"
     "strconv"
-    "time"
 )
 
 type (
@@ -133,18 +132,6 @@ func ConvertToUnit(value string) string{
     return newValue
 }
 
-func (h *TopHandler) Upload() {
-    now := time.Now().UTC().UnixNano() / int64(time.Microsecond)
-    for k, v := range h.Map {
-        seriesID := MakeSeriesID(h.Info.Cluster.Token, h.Info.Cluster.Group, k)
-        h.Info.Events <- SyncEvent{
-            SeriesID:    seriesID,
-            Key:         k,
-            Value:       v,
-            Time:        now}
-    }
-}
-
 func (h *TopHandler) Reset() {
     h.State.InTable = false
     h.State.LineCount = 0
@@ -261,20 +248,12 @@ func (h *TopHandler) ParseTopHeaders(line string) bool {
 
 func (h *TopHandler) Parse(data string) {
     if strings.Contains(data, "Processes") {
-        h.Upload()
+        h.Info.Upload(h.Map)
         h.Reset()
-        // fmt.Println(data)
     }
 
     h.State.LineCount++
     h.ParseTopHeaders(data)
     h.ParseTableHeaders(data)
-    // h.ParseTable(data)
-    
-    /*
-    if !h.State.InTable {
-        fmt.Println(data)
-    }
-    */
 }
 
