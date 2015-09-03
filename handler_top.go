@@ -10,7 +10,7 @@ import (
 )
 
 type (
-    WatchEventMap map[string]string
+    KVMap map[string]string
     ParseState struct {
         InTable         bool
         TableRowCount   int
@@ -19,7 +19,7 @@ type (
     }
     TopHandler struct {
         Info      *HandlerInfo
-        Map       WatchEventMap
+        Map       KVMap
         State     ParseState
         Matches   map[string]bool
     }
@@ -31,7 +31,7 @@ func NewTopHandler(info *HandlerInfo) *TopHandler {
         InTable: false,
         TableRowCount: 0,
         LineCount: 0}
-    h.Map = make(WatchEventMap)
+    h.Map = make(KVMap)
     h.Load()
     return h
 }
@@ -73,10 +73,6 @@ func (h *TopHandler) Run() {
         h.Parse(data)
         // h.Print()
     }
-}
-
-func (h *TopHandler) Parse(data string) {
-    h.ParseTopMacOSX(data)
 }
 
 func (h *TopHandler) Help() {
@@ -283,7 +279,7 @@ func (h *TopHandler) ParseTopHeaders(line string) bool {
     return valid
 }
 
-func (h *TopHandler) ParseTopMacOSX(data string) {
+func (h *TopHandler) Parse(data string) {
     if strings.Contains(data, "Processes") {
         h.Upload()
         h.Reset()
