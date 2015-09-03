@@ -2,9 +2,11 @@ package main
 
 import (
     "log"
+    "strings"
 )
 
 type (
+    KVMap map[string]string
     Handler interface {
         Load()
         Run()
@@ -31,3 +33,17 @@ func GetHandler(info *HandlerInfo) Handler {
 
     return nil
 }
+
+func ConvertToValidSeriesKey(rawId string) string {
+    // Convert #, %
+    newId := strings.Replace(rawId, "#", "num_", -1)
+    newId = strings.Replace(newId, "%", "pct_", -1)
+
+    // Conver space to _
+    newId = strings.Replace(newId, " ", "_", -1)
+    newId = strings.ToLower(newId)
+
+    return newId
+}
+
+

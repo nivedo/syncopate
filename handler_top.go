@@ -10,7 +10,6 @@ import (
 )
 
 type (
-    KVMap map[string]string
     ParseState struct {
         InTable         bool
         TableRowCount   int
@@ -133,18 +132,6 @@ func ConvertToUnit(value string) string{
         }
     }
     return newValue
-}
-
-func ConvertToValidSeriesKey(rawId string) string {
-    // Convert #, %
-    newId := strings.Replace(rawId, "#", "num_", -1)
-    newId = strings.Replace(newId, "%", "pct_", -1)
-
-    // Conver space to _
-    newId = strings.Replace(newId, " ", "_", -1)
-    newId = strings.ToLower(newId)
-
-    return newId
 }
 
 func (h *TopHandler) Upload() {
