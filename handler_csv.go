@@ -20,7 +20,6 @@ type (
 
 func NewCsvHandler(info *HandlerInfo) *CsvHandler {
     h := &CsvHandler{Info :info}
-    h.Vars = make(KVList,10)
     h.IndexMap = make(IKMap)
     h.Load()
     return h
@@ -57,6 +56,7 @@ func (h *CsvHandler) Load() {
     for i, k := range h.IndexMap {
         log.Printf("[TRACKING] Index: %d, Name: %s\n", i, k) 
     }
+    h.Vars = make(KVList, len(h.IndexMap))
 }
 
 func (h *CsvHandler) Run() {
@@ -72,7 +72,7 @@ func (h *CsvHandler) ParseLine(data string) {
         numCols := len(tokens)
         for i, k := range h.IndexMap {
             if i >= 0 && i < numCols {
-                h.Vars = append(h.Vars, KVPair{K: k, V: strings.TrimSpace(tokens[i])})
+                h.Vars[i] = KVPair{K: k, V: strings.TrimSpace(tokens[i])}
             }
         }
         h.Vars.Print()
