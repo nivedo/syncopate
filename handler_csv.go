@@ -10,11 +10,11 @@ import (
 )
 
 type (
-    ColNameMap map[int]string
+    IKMap map[int]string
     CsvHandler struct {
         Info        *HandlerInfo
         Map         KVMap
-        ColNames    ColNameMap
+        IndexMap    IKMap
         ColRequests []string
         LineCount   int
     }
@@ -22,6 +22,8 @@ type (
 
 func NewCsvHandler(info *HandlerInfo) *CsvHandler {
     h := &CsvHandler{Info :info}
+    h.Map = make(KVMap)
+    h.IndexMap = make(IKMap)
     h.Load()
     return h
 }
@@ -29,7 +31,7 @@ func NewCsvHandler(info *HandlerInfo) *CsvHandler {
 func (h *CsvHandler) Help() {
     // List all variables
     fmt.Println("csv handler help --")
-    for i, k := range h.ColNames {
+    for i, k := range h.IndexMap {
         fmt.Printf("%5s: %s", strconv.Itoa(i), k)
     }
 }
@@ -40,7 +42,7 @@ func (h *CsvHandler) Load() {
 
     if len(cFields) == 0 {
         for i := 0; i < defaultNumCols; i++ {
-            h.ColNames[i] = fmt.Sprintf("col%d", i)
+            h.IndexMap[i] = fmt.Sprintf("col%d", i)
         }
     } else {
         for _, v := range cFields {
@@ -49,7 +51,7 @@ func (h *CsvHandler) Load() {
                 // Matches $column_index pattern
                 num, err := strconv.ParseInt(v["pattern"][1:], 10, 64)
                 if err == nil {
-                    h.ColNames[int(num)] = v["desc"]
+                    h.IndexMap[int(num)] = v["desc"]
                 }
             } else {
                 // Column name specified
@@ -67,10 +69,10 @@ func (h *CsvHandler) Run() {
 }
 
 func (h *CsvHandler) ParseLine(data string) {
-    if len(h.ColNames) > 0 {
+    if len(h.IndexMap) > 0 {
         tokens := strings.Split(data, ",")
         numCols := len(tokens)
-        for i, k := range h.ColNames {
+        for i, k := range h.IndexMap {
             if i >= 0 && i < numCols {
                 h.Map[k] = tokens[i]
             }

@@ -27,6 +27,8 @@ func GetHandler(info *HandlerInfo) Handler {
         return NewRegexHandler(info)
     case "top":
         return NewTopHandler(info)
+    case "csv":
+        return NewCsvHandler(info)
     default:
         log.Fatal("ERROR: No mode specified.")
     }
