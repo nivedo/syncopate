@@ -12,7 +12,7 @@ type (
     IKMap map[int]string
     CsvHandler struct {
         Info        *HandlerInfo
-        Map         KVMap
+        Vars        KVList
         IndexMap    IKMap
         LineCount   int
     }
@@ -20,7 +20,7 @@ type (
 
 func NewCsvHandler(info *HandlerInfo) *CsvHandler {
     h := &CsvHandler{Info :info}
-    h.Map = make(KVMap)
+    h.Vars = make(KVList,10)
     h.IndexMap = make(IKMap)
     h.Load()
     return h
@@ -72,15 +72,15 @@ func (h *CsvHandler) ParseLine(data string) {
         numCols := len(tokens)
         for i, k := range h.IndexMap {
             if i >= 0 && i < numCols {
-                h.Map[k] = strings.TrimSpace(tokens[i])
+                h.Vars = append(h.Vars, KVPair{K: k, V: strings.TrimSpace(tokens[i])})
             }
         }
-        h.Map.Print()
+        h.Vars.Print()
     }
 }
 
 func (h *CsvHandler) Parse(data string) {
     h.ParseLine(data)
-    h.Info.Upload(h.Map)
+    h.Info.Upload(h.Vars)
     h.LineCount++
 }

@@ -35,13 +35,12 @@ func (h *RegexHandler) Load() {
 func (h *RegexHandler) Run() {
     for {
         data := <-h.Info.Data
-        h.Parse(data)
-        /*
-        v,l := ExtractValues(data,"CPU usage: {%p:cpu_usage_user} user, {%p:cpu_usage_sys} sys")
+        //h.Parse(data)
+        v,l := ExtractRegex(data,"CPU usage: {{ cpu_usage_user:%p }} user, {{ cpu_usage_sys:%p }} sys")
+        //v,l := ExtractCSV(data,"{{ $1,3,5,6,2:c1,c3 }}")
         for i,_ := range v {
             fmt.Printf("%s:%s\n",l[i],v[i])
         }
-        */
     }
 }
 
@@ -71,27 +70,37 @@ func (h *RegexHandler) Help() {
 }
 
 func FormatRegex(regex string) (string, []string) {
-    r, _ := regexp.Compile("\\{(%[a-z]):(\\w+)\\}")
+    //r, _ := regexp.Compile("\\{(%[a-z]):(\\w+)\\}")
+    r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
     tokens := r.FindAllStringSubmatch(regex, -1)
 
     result := regex
     var labels []string
 
     for _,token := range tokens {
-        labels = append(labels, token[2])
-        switch token[1] {
+        labels = append(labels, strings.TrimSpace(token[1]))
+        rule := strings.TrimSpace(token[2])
+        switch rule {
         case "%p":
             result = strings.Replace(result, token[0], "(\\d*\\.?\\d*)%", 1)
         case "%f":
             result = strings.Replace(result, token[0], "(\\d*\\.?\\d*)", 1)
         case "%d":
             result = strings.Replace(result, token[0], "(\\d+)", 1)
+        default:
+            // Use user specified regex
+            result = strings.Replace(result, token[0], rule, 1)
         }
     }
+
+    // Whitespace is arbitrary
+    r2, _ := regexp.Compile("\\s+")
+    result = r2.ReplaceAllString(result, "\\s+")
+
     return result, labels
 }
 
-func ExtractValues(data string, regex string) ([]string, []string) {
+func ExtractRegex(data string, regex string) ([]string, []string) {
     fr, labels := FormatRegex(regex)
     match, _ := regexp.MatchString(fr, data)
     if match {

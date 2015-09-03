@@ -17,9 +17,9 @@ type (
     }
     TopHandler struct {
         Info      *HandlerInfo
-        Map       KVMap
+        Vars      KVList
         State     ParseState
-        Matches   map[string]bool
+        Matches   map[string]int
     }
 )
 
@@ -29,7 +29,6 @@ func NewTopHandler(info *HandlerInfo) *TopHandler {
         InTable: false,
         TableRowCount: 0,
         LineCount: 0}
-    h.Map = make(KVMap)
     h.Load()
     return h
 }
@@ -47,22 +46,27 @@ func (h *TopHandler) Load() {
         "physmem_used",
         "physmem_unused",
         "physmem_wired"}
-    h.Matches = make(map[string]bool)
+    h.Matches = make(map[string]int)
     cFields := h.Info.Config.Fields
+    numVar := 0
 
     if len(cFields) == 0 {
         for _, s := range defaults {
-            h.Matches[s] = true
+            h.Matches[s] = numVar
+            numVar++
         }
     } else {
         for _, v := range cFields {
-            h.Matches[v["desc"]] = true
+            h.Matches[v["desc"]] = numVar
+            numVar++
         }
     }
 
     for k,_ := range h.Matches {
         log.Printf("[TRACKING] Field: %s\n", k)
     }
+
+    h.Vars = make(KVList, numVar)
 }
 
 func (h *TopHandler) Run() {
@@ -139,9 +143,7 @@ func (h *TopHandler) Reset() {
 
     // NOTE: Cannot assign a new map to watchEventMap because that doesn't
     //       change the reference in other function calls
-    for k := range h.Map {
-        delete(h.Map, k)
-    }
+    // h.Vars = h.Vars[:0]
 }
 
 func (h *TopHandler) InitTableHeaders(line string) {
@@ -184,8 +186,10 @@ func (h *TopHandler) ParseTable(line string) {
 
 func (h *TopHandler) AddEvent(key string, value string) bool {
     valid := len(key) > 0 && len(value) > 0
-    if valid && h.Matches[key] {
-        h.Map[key] = ConvertToUnit(value)
+    if valid {
+        if index, ok := h.Matches[key]; ok {
+            h.Vars[index] = KVPair{K: key, V: ConvertToUnit(value)}
+        }
     }
     return valid
 }
@@ -248,7 +252,7 @@ func (h *TopHandler) ParseTopHeaders(line string) bool {
 
 func (h *TopHandler) Parse(data string) {
     if strings.Contains(data, "Processes") {
-        h.Info.Upload(h.Map)
+        h.Info.Upload(h.Vars)
         h.Reset()
     }
 

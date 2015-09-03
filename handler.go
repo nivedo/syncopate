@@ -8,7 +8,11 @@ import (
 )
 
 type (
-    KVMap map[string]string
+    KVPair struct {
+        K string
+        V string
+    }
+    KVList []KVPair
     Handler interface {
         Load()
         Run()
@@ -50,22 +54,22 @@ func ConvertToValidSeriesKey(rawId string) string {
     return newId
 }
 
-func (m KVMap) Print() {
+func (m KVList) Print() {
     fmt.Printf("{ size: %d\n", len(m))
-    for k,v := range m {
-        fmt.Printf("%20s: %s\n",k,v)
+    for _,v := range m {
+        fmt.Printf("%20s: %s\n",v.K,v.V)
     }
     fmt.Println("}")
 }
 
-func (info *HandlerInfo) Upload(m KVMap) {
+func (info *HandlerInfo) Upload(m KVList) {
     now := time.Now().UTC().UnixNano() / int64(time.Microsecond)
-    for k, v := range m {
-        seriesID := MakeSeriesID(info.Cluster.Token, info.Cluster.Group, k)
+    for _, v := range m {
+        seriesID := MakeSeriesID(info.Cluster.Token, info.Cluster.Group, v.K)
         info.Events <- SyncEvent{
             SeriesID:    seriesID,
-            Key:         k,
-            Value:       v,
+            Key:         v.K,
+            Value:       v.V,
             Time:        now}
     }
 }
