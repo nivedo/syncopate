@@ -4,6 +4,7 @@ import (
     "log"
     "strings"
     "fmt"
+    "time"
 )
 
 type (
@@ -56,4 +57,17 @@ func (m KVMap) Print() {
     }
     fmt.Println("}")
 }
+
+func (info *HandlerInfo) Upload(m KVMap) {
+    now := time.Now().UTC().UnixNano() / int64(time.Microsecond)
+    for k, v := range m {
+        seriesID := MakeSeriesID(info.Cluster.Token, info.Cluster.Group, k)
+        info.Events <- SyncEvent{
+            SeriesID:    seriesID,
+            Key:         k,
+            Value:       v,
+            Time:        now}
+    }
+}
+
 

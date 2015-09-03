@@ -6,7 +6,6 @@ import (
     "regexp"
     "strings"
     "strconv"
-    "time"
 )
 
 type (
@@ -82,20 +81,6 @@ func (h *CsvHandler) ParseLine(data string) {
 
 func (h *CsvHandler) Parse(data string) {
     h.ParseLine(data)
-    h.Upload()
+    h.Info.Upload(h.Map)
     h.LineCount++
 }
-
-func (h *CsvHandler) Upload() {
-    now := time.Now().UTC().UnixNano() / int64(time.Microsecond)
-    for k, v := range h.Map {
-        seriesID := MakeSeriesID(h.Info.Cluster.Token, h.Info.Cluster.Group, k)
-        h.Info.Events <- SyncEvent{
-            SeriesID:    seriesID,
-            Key:         k,
-            Value:       v,
-            Time:        now}
-    }
-}
-
-
