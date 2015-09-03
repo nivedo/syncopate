@@ -38,9 +38,17 @@ func NewTopHandler(info *HandlerInfo) *TopHandler {
 
 func (h *TopHandler) Load() {
     defaults := []string{
+        "processes_total",
+        "processes_running",
+        "processes_stuck",
+        "processes_sleeping",
+        "processes_threads",
         "cpu_usage_user",
         "cpu_usage_sys",
-        "cpu_usage_idle"}
+        "cpu_usage_idle",
+        "physmem_used",
+        "physmem_unused",
+        "physmem_wired"}
     h.Matches = make(map[string]bool)
     cFields := h.Info.Config.Fields
 
