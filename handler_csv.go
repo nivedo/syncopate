@@ -26,6 +26,14 @@ func NewCsvHandler(info *HandlerInfo) *CsvHandler {
     return h
 }
 
+func (h *CsvHandler) Help() {
+    // List all variables
+    fmt.Println("csv handler help --")
+    for i, k := range h.ColNames {
+        fmt.Printf("%5s: %s", strconv.Itoa(i), k)
+    }
+}
+
 func (h *CsvHandler) Load() {
     defaultNumCols := 5
     cFields := h.Info.Config.Fields
@@ -75,7 +83,7 @@ func (h *CsvHandler) Parse(data string) {
     if h.LineCount == 0 {
 
     }
-
+    h.ParseLine(data)
     h.LineCount++
 }
 

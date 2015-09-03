@@ -76,7 +76,7 @@ func (h *TopHandler) Run() {
 
 func (h *TopHandler) Help() {
     // List all variables
-    keys := make([]string, 0, len(h.Map))
+    keys := make([]string,0)
     for k := range h.Matches {
         keys = append(keys, k)
     }
