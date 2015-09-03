@@ -1,7 +1,7 @@
 package main
 
 import (
-    //"log"
+    "log"
     "fmt"
     "regexp"
     "strings"
@@ -15,7 +15,6 @@ type (
         Info        *HandlerInfo
         Map         KVMap
         IndexMap    IKMap
-        ColRequests []string
         LineCount   int
     }
 )
@@ -53,11 +52,11 @@ func (h *CsvHandler) Load() {
                 if err == nil {
                     h.IndexMap[int(num)] = v["desc"]
                 }
-            } else {
-                // Column name specified
-                h.ColRequests = append(h.ColRequests, v["desc"]) 
             }
         }
+    }
+    for i, k := range h.IndexMap {
+        log.Printf("[TRACKING] Index: %d, Name: %s\n", i, k) 
     }
 }
 
