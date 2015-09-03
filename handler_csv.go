@@ -29,7 +29,7 @@ func NewCsvHandler(info *HandlerInfo) *CsvHandler {
 
 func (h *CsvHandler) Help() {
     // List all variables
-    fmt.Println("csv handler help --")
+    fmt.Println("---- Csv Help ----\n")
     for i, k := range h.IndexMap {
         fmt.Printf("%5s: %s", strconv.Itoa(i), k)
     }
@@ -73,9 +73,10 @@ func (h *CsvHandler) ParseLine(data string) {
         numCols := len(tokens)
         for i, k := range h.IndexMap {
             if i >= 0 && i < numCols {
-                h.Map[k] = tokens[i]
+                h.Map[k] = strings.TrimSpace(tokens[i])
             }
         }
+        h.Map.Print()
     }
 }
 

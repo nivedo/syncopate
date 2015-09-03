@@ -3,6 +3,7 @@ package main
 import (
     "log"
     "strings"
+    "fmt"
 )
 
 type (
@@ -48,4 +49,11 @@ func ConvertToValidSeriesKey(rawId string) string {
     return newId
 }
 
+func (m KVMap) Print() {
+    fmt.Printf("{ size: %d\n", len(m))
+    for k,v := range m {
+        fmt.Printf("%20s: %s\n",k,v)
+    }
+    fmt.Println("}")
+}
 

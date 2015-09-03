@@ -81,7 +81,7 @@ func (h *TopHandler) Help() {
         keys = append(keys, k)
     }
 
-    fmt.Println("top handler help --")
+    fmt.Println("---- Top Help ----\n")
     fmt.Printf("%20s: %s", "variables", strings.Join(keys, ", "))
     /*
     keys := make([]string, 0, len(h.Map))
