@@ -140,7 +140,7 @@ func (h *TopHandler) Upload() {
         h.Info.Events <- SyncEvent{
             SeriesID:    seriesID,
             Key:         k,
-            Value:       ConvertToUnit(v),
+            Value:       v,
             Time:        now}
     }
 }
@@ -198,7 +198,7 @@ func (h *TopHandler) ParseTable(line string) {
 func (h *TopHandler) AddEvent(key string, value string) bool {
     valid := len(key) > 0 && len(value) > 0
     if valid && h.Matches[key] {
-        h.Map[key] = value
+        h.Map[key] = ConvertToUnit(value)
     }
     return valid
 }
