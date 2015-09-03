@@ -1,0 +1,15 @@
+---
+key: YOUR_API_KEY
+group: testgroup
+mode: top
+fields:
+  - pattern: "(\\d+) threads"
+    desc: "num_threads"
+  - pattern: "CPU usage: (\\d*\\.?\\d*)%"
+    desc: "cpu_usage"
+  - pattern: "AAPL PRICE: (\\d*\\.?\\d*)"
+    desc: "aapl_price"
+  - pattern: "TEMP: (\\d+)"
+    desc: "t1000_temp"
+  - pattern: "LOAD: (\\d+)"
+    desc: "t1000_load"
