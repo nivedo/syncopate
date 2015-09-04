@@ -51,31 +51,31 @@ options:
       {{ disk_read:(\d+\/\d+[BKMG]?) }} read,
       {{ disk_written:(\d+\/\d+[BKMG]?) }} written.
   - match: >
-      {{ pid:^(\d+) }}
-      {{ command:([\w\.\s]+) }}
+      {{ pid:^(\d+)[+-]? }}
+      {{ command:([\w\.\-\s]+) }}
       {{ pct_cpu:(\d+.\d+) }}
       {{ time:(\d{2}:\d{2}\.\d{2}) }}
       {{ num_th:([\d\/]+) }}
-      {{ num_wq:%d }}
-      {{ num_ports:(\d+)\+? }}
+      {{ num_wq:([\d\/]+) }}
+      {{ num_ports:(\d+)[+-]? }}
       {{ mem:%mem }}
       {{ purg:%mem }}
       {{ cmprs:%mem }}
       {{ pgrp:%d }}
       {{ ppid:%d }}
       {{ state:%w }}
-      {{ boosts:(\*?\d+\+?\[\d+\+?\]) }}
+      {{ boosts:(\*?\d+[+-]?\[\d+[+-]?\]) }}
       {{ cpu_me:%f }}
       {{ cpu_others:%f }}
       {{ uid:%d }}
-      {{ faults:(\d+)\+? }}
-      {{ cow:(\d+)\+? }}
-      {{ msgsent:(\d+)\+? }}
-      {{ msgrecv:(\d+)\+? }}
-      {{ sysbsd:(\d+)\+? }}
-      {{ sysmach:(\d+)\+? }}
-      {{ csw:(\d+)\+? }}
-      {{ pageins:(\d+)\+? }}
-      {{ idlew:(\d+)\+? }}
+      {{ faults:(\d+)[+-]? }}
+      {{ cow:(\d+)[+-]? }}
+      {{ msgsent:(\d+)[+-]? }}
+      {{ msgrecv:(\d+)[+-]? }}
+      {{ sysbsd:(\d+)[+-]? }}
+      {{ sysmach:(\d+)[+-]? }}
+      {{ csw:(\d+)[+-]? }}
+      {{ pageins:(\d+)[+-]? }}
+      {{ idlew:(\d+)[+-]? }}
       {{ power:(\d+.\d+) }}
       {{ user:%w }}

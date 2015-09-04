@@ -130,7 +130,7 @@ func NewMatchRegex(pattern string) *MatchRegex {
         case "%w":
             subs[subtoken] = "(\\w+)"
         case "%mem":
-            subs[subtoken] = "(\\d+[BKMG]?\\+?)"
+            subs[subtoken] = "(\\d+[BKMG]?)[+-]?"
         default:
             // Use user specified regex
             subs[subtoken] = rule

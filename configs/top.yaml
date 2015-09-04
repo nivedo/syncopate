@@ -55,12 +55,6 @@ options:
       {{ command:([\w\.\s]+) }}
       {{ pct_cpu:(\d+.\d+) }}
       {{ time:(\d{2}:\d{2}\.\d{2}) }}
-      {{ th:(\d+\/?\d*) }}
-  - match: >
-      {{ pid:^(\d+) }}
-      {{ command:([\w\.\s]+) }}
-      {{ pct_cpu:(\d+.\d+) }}
-      {{ time:(\d{2}:\d{2}\.\d{2}) }}
       {{ num_th:([\d\/]+) }}
       {{ num_wq:%d }}
       {{ num_ports:(\d+)\+? }}
