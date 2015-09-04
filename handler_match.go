@@ -5,6 +5,7 @@ import (
     "fmt"
     "regexp"
     "strings"
+    "strconv"
 )
 
 /*
@@ -28,11 +29,14 @@ type (
 
         // Batch Parameters
         Batch      bool
+        Runs       []int
+        Repeats    []int
         FailMatch  Match
     }
     Match interface {
         // Eval returns an array of labels, values, and match success
         Eval(line string) ([]string, []string, bool)
+        NumVars() int
     }
     MatchRegex struct {
         Desc    string
@@ -48,18 +52,34 @@ func NewMatchHandler(info *HandlerInfo, batch bool) *MatchHandler {
 }
 
 func (h *MatchHandler) Load() {
+    numVars := 0
     for _,v := range h.Info.Config.Options {
         if desc, ok := v["match"]; ok {
             m := NewMatch(desc)
             h.AddMatch(m)
-            log.Printf("[TRACKING] %s\n", desc)
+
+            log.Printf("[MatchHandler] TRACKING %s\n", desc)
+            h.Repeats = append(h.Repeats, 0)
+            repeats := 1
+
+            if rep, ok := v["repeat"]; ok {
+                repeats, _ = strconv.Atoi(rep)
+                if repeats > 1 {
+                    h.Repeats[len(h.Repeats)-1] = repeats
+                    log.Printf("[MatchHandler] Repeat %s %d times\n", desc, repeats)
+                }
+            }
+
+            numVars = numVars + repeats * m.NumVars()
         }
         if fail, ok := v["fail"]; ok {
             h.FailMatch = NewMatch(fail)
-            log.Printf("[FAILURE CONDITION] %s\n", fail)
+            log.Printf("[MatchHandler] Faliure Condition - %s\n", fail)
         }
     }
-    h.Vars = make(KVList, 100)
+    log.Printf("[MatchHandler] Initialized with %d variables.", numVars)
+    h.Runs = make([]int, len(h.Matches))
+    h.Vars = make(KVList, numVars)
 }
 
 func (h *MatchHandler) Help() {
@@ -101,11 +121,27 @@ func (h *MatchHandler) AddValues(keys []string, values []string) int {
     return len(values)
 }
 
+func (h *MatchHandler) Eval(line string, matchIndex int) int {
+    rule := h.Matches[matchIndex]
+    keys, vals, _ := rule.Eval(line)
+
+    // Repeated Rules, add suffix
+    if h.Repeats[h.MatchIndex] > 0 {
+        skeys := make([]string, len(keys))
+        suffix := h.Runs[h.MatchIndex]
+        for i,_ := range keys {
+            skeys[i] = fmt.Sprintf("%s_%d",keys[i],suffix)
+        }
+        return h.AddValues(skeys, vals)
+    }
+
+    return h.AddValues(keys, vals)
+}
+
 func (h *MatchHandler) ParseSingle(line string) bool {
     success := false
-    for _,rule := range h.Matches {
-        keys, vals, _ := rule.Eval(line)
-        n := h.AddValues(keys, vals)
+    for i,_ := range h.Matches {
+        n := h.Eval(line,i)
         if n > 0 {
             UploadKV(h.Vars[:(n-1)], h.Info)
             success = true
@@ -116,21 +152,27 @@ func (h *MatchHandler) ParseSingle(line string) bool {
 
 func (h *MatchHandler) ParseBatch(line string) bool {
     success := false
-    keys, vals, _ := h.Matches[h.MatchIndex].Eval(line)
-    n := h.AddValues(keys, vals)
+    n := h.Eval(line, h.MatchIndex)
     for n > 0 {
         // Match passes, advance to next rule
         success = true
+
+        // Repeated rules
+        if h.Runs[h.MatchIndex] < h.Repeats[h.MatchIndex]-1 {
+            h.Runs[h.MatchIndex]++
+            break
+        }
+
         h.MatchIndex++
         if h.MatchIndex == len(h.Matches) {
             // All rules pass, upload KVList
             UploadKV(h.Vars[:(h.VarIndex-1)], h.Info)
             h.MatchIndex = 0
             h.VarIndex = 0
+            h.Runs = make([]int, len(h.Runs))
         }
 
-        keys, vals, _ = h.Matches[h.MatchIndex].Eval(line)
-        n = h.AddValues(keys, vals)
+        n = h.Eval(line, h.MatchIndex)
     }
     return success
 }
@@ -206,4 +248,8 @@ func (r *MatchRegex) Eval(line string) ([]string, []string, bool) {
         return r.Labels, allMatch[0][1:], true
     }
     return nil, nil, false
+}
+
+func (r *MatchRegex) NumVars() int {
+    return len(r.Labels)
 }
