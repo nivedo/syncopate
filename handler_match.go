@@ -20,7 +20,7 @@ type (
     MatchHandler struct {
         Info  *HandlerInfo
         Vars  KVList
-        Matchs []Match
+        Matches []Match
         Start int
         N     int
         Batch bool
@@ -48,7 +48,7 @@ func (h *MatchHandler) Load() {
             log.Printf("[TRACKING] Match: %s\n", rule)
         }
     }
-    h.Vars = make(KVList, 50)
+    h.Vars = make(KVList, 100)
 }
 
 func (h *MatchHandler) Help() {
@@ -71,11 +71,11 @@ func (h *MatchHandler) Parse(data string) {
 }
 
 func (h *MatchHandler) AddMatch(r Match) {
-    h.Matchs = append(h.Matchs, r)
+    h.Matches = append(h.Matches, r)
 }
 
 func (h *MatchHandler) ParseSingle(line string) {
-    for _,rule := range h.Matchs {
+    for _,rule := range h.Matches {
         n := rule.Eval(line, &h.Vars, 0)
         if(n > 0) {
             UploadKV(h.Vars[:(n-1)], h.Info)
@@ -84,18 +84,18 @@ func (h *MatchHandler) ParseSingle(line string) {
 }
 
 func (h *MatchHandler) ParseBatch(line string) {
-    n := h.Matchs[h.N].Eval(line, &h.Vars, h.Start)
+    n := h.Matches[h.N].Eval(line, &h.Vars, h.Start)
     for n > 0 {
         // Match passes, advance to next rule
         h.N++
         h.Start = h.Start + n
-        if h.N == len(h.Matchs) {
+        if h.N == len(h.Matches) {
             // All rules pass, upload KVList
             UploadKV(h.Vars[:(h.Start-1)], h.Info)
             h.N = 0
             h.Start = 0
         }
-        n = h.Matchs[h.N].Eval(line, &h.Vars, h.Start)
+        n = h.Matches[h.N].Eval(line, &h.Vars, h.Start)
     }
 }
 
@@ -122,13 +122,15 @@ func NewMatchRegex(pattern string) *MatchRegex {
         subtoken := fmt.Sprintf("SYNCVAR_%d",i)
         switch rule {
         case "%p":
-            subs[subtoken] = "(\\d*\\.?\\d*)%"
+            subs[subtoken] = "((?:\\d+\\.?\\d*)|(?:\\.\\d+))%"
         case "%f":
-            subs[subtoken] = "(\\d*\\.?\\d*)"
+            subs[subtoken] = "([+-]?(?:\\d+\\.?\\d*)|(?:\\.\\d+))"
         case "%d":
             subs[subtoken] = "(\\d+)"
+        case "%w":
+            subs[subtoken] = "(\\w+)"
         case "%mem":
-            subs[subtoken] = "(\\d+[BKMG]?)"
+            subs[subtoken] = "(\\d+[BKMG]?\\+?)"
         default:
             // Use user specified regex
             subs[subtoken] = rule
@@ -158,7 +160,7 @@ func (r *MatchRegex) Eval(line string, vars *KVList, start int) int {
         reg, _ := regexp.Compile(r.Pattern)
         allMatch := reg.FindAllStringSubmatch(line, -1)
         for i,v := range allMatch[0][1:] {
-            (*vars)[index] = KVPair{K: r.Labels[i], V: v}
+            (*vars)[index] = KVPair{K: r.Labels[i], V: strings.TrimSpace(v)}
             log.Println((*vars)[index])
             index++
         }
