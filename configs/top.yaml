@@ -51,7 +51,8 @@ options:
       Disks:
       {{ disk_read:(\d+\/\d+[BKMG]?) }} read,
       {{ disk_written:(\d+\/\d+[BKMG]?) }} written.
-  - match: >
+  - repeat: 5
+    match: >
       {{ pid:(\d+) }}
       {{ command:([\w\.\s]+) }}
       {{ pct_cpu:(\d+.\d+) }}

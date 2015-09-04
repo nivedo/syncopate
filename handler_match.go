@@ -21,16 +21,18 @@ type (
         Info       *HandlerInfo
         Vars       KVList
         Matches    []Match
-        Start      int
-        N          int
+
+        // Helpers
+        VarIndex    int
+        MatchIndex  int
 
         // Batch Parameters
         Batch      bool
         FailMatch  Match
     }
     Match interface {
-        // Eval inserts elements into vars from vars[start:], returns num elements inserted
-        Eval(line string, vars *KVList, start int) (int, bool)
+        // Eval returns an array of labels, values, and match success
+        Eval(line string) ([]string, []string, bool)
     }
     MatchRegex struct {
         Desc    string
@@ -40,7 +42,7 @@ type (
 )
 
 func NewMatchHandler(info *HandlerInfo, batch bool) *MatchHandler {
-    h := &MatchHandler{Info: info, Start: 0, N: 0, Batch: batch}
+    h := &MatchHandler{Info: info, VarIndex: 0, MatchIndex: 0, Batch: batch}
     h.Load()
     return h
 }
@@ -77,7 +79,7 @@ func (h *MatchHandler) Parse(data string) {
     } else {
         if !h.ParseBatch(data) {
             if h.BatchFailed(data) {
-                log.Fatalf("[BatchHandler] FAILED match %+v with line %s", h.Matches[h.N], data)
+                log.Fatalf("[BatchHandler] FAILED match %+v with line %s", h.Matches[h.MatchIndex], data)
             }
         }
     }
@@ -87,11 +89,24 @@ func (h *MatchHandler) AddMatch(r Match) {
     h.Matches = append(h.Matches, r)
 }
 
+func (h *MatchHandler) AddValues(keys []string, values []string) int {
+    for i,_ := range values {
+        kv := CreateKVPair(keys[i], values[i])
+        if h.Info.Config.Debug {
+            log.Println("[MatchHandler] Adding KV:", kv)
+        }
+        h.Vars[h.VarIndex] = kv
+        h.VarIndex++
+    }
+    return len(values)
+}
+
 func (h *MatchHandler) ParseSingle(line string) bool {
     success := false
     for _,rule := range h.Matches {
-        n, _ := rule.Eval(line, &h.Vars, 0)
-        if(n > 0) {
+        keys, vals, _ := rule.Eval(line)
+        n := h.AddValues(keys, vals)
+        if n > 0 {
             UploadKV(h.Vars[:(n-1)], h.Info)
             success = true
         }
@@ -101,25 +116,27 @@ func (h *MatchHandler) ParseSingle(line string) bool {
 
 func (h *MatchHandler) ParseBatch(line string) bool {
     success := false
-    n, _ := h.Matches[h.N].Eval(line, &h.Vars, h.Start)
+    keys, vals, _ := h.Matches[h.MatchIndex].Eval(line)
+    n := h.AddValues(keys, vals)
     for n > 0 {
         // Match passes, advance to next rule
         success = true
-        h.N++
-        h.Start = h.Start + n
-        if h.N == len(h.Matches) {
+        h.MatchIndex++
+        if h.MatchIndex == len(h.Matches) {
             // All rules pass, upload KVList
-            UploadKV(h.Vars[:(h.Start-1)], h.Info)
-            h.N = 0
-            h.Start = 0
+            UploadKV(h.Vars[:(h.VarIndex-1)], h.Info)
+            h.MatchIndex = 0
+            h.VarIndex = 0
         }
-        n, _ = h.Matches[h.N].Eval(line, &h.Vars, h.Start)
+
+        keys, vals, _ = h.Matches[h.MatchIndex].Eval(line)
+        n = h.AddValues(keys, vals)
     }
     return success
 }
 
 func (h *MatchHandler) BatchFailed(line string) bool {
-    _, failed := h.FailMatch.Eval(line, nil, -1)
+    _, _, failed := h.FailMatch.Eval(line)
     return failed
 }
 
@@ -181,18 +198,12 @@ func NewMatchRegex(desc string) *MatchRegex {
     return &MatchRegex{Desc: desc, Pattern: result, Labels: labels}
 }
 
-func (r *MatchRegex) Eval(line string, vars *KVList, start int) (int, bool) {
-    index := start
+func (r *MatchRegex) Eval(line string) ([]string, []string, bool) {
     match, _ := regexp.MatchString(r.Pattern, line)
     if match {
         reg, _ := regexp.Compile(r.Pattern)
         allMatch := reg.FindAllStringSubmatch(line, -1)
-        for i,v := range allMatch[0][1:] {
-            (*vars)[index] = KVPair{K: r.Labels[i], V: strings.TrimSpace(v)}
-            log.Println((*vars)[index])
-            index++
-        }
-        return index - start, true
+        return r.Labels, allMatch[0][1:], true
     }
-    return 0, match
+    return nil, nil, false
 }

@@ -65,20 +65,16 @@ func LoadConfig() *Config {
         switch config.Mode {
         case "top":
             src, _ := Asset("configs/top.yaml")
-            log.Println(src)
             err = yaml.Unmarshal(src, config)
             if err != nil {
                 log.Fatal(err)
             }
-            log.Println(config)
         }
     }
 
     // Check if config is legal
     if !config.ok() {
         log.Fatalf("Illegal Config: %+v", config)
-    } else {
-        log.Printf("Running Syncopate with config: %+v", config)
     }
 
     return config

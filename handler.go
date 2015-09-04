@@ -59,6 +59,10 @@ func ConvertToValidSeriesKey(rawId string) string {
     return newId
 }
 
+func CreateKVPair(key string, value string) KVPair {
+    return KVPair{K: ConvertToValidSeriesKey(key), V: strings.TrimSpace(value)}
+}
+
 func (list *KVList) Print() {
     fmt.Printf("{ size: %d\n", len(*list))
     for _,v := range *list {
