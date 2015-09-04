@@ -1,0 +1,7 @@
+---
+key: YOUR_API_KEY
+group: testgroup
+mode: rule
+options:
+  - rule: "CPU usage: {{ cpu_usage_user:%p }} user, {{ cpu_usage_sys:%p }} sys"
+  - rule: "Load Avg: {{ load_1:%f }}, {{ load_2:%f }}, {{ load_3:%f }}"

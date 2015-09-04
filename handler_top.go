@@ -47,7 +47,7 @@ func (h *TopHandler) Load() {
         "physmem_unused",
         "physmem_wired"}
     h.Matches = make(map[string]int)
-    cFields := h.Info.Config.Fields
+    cFields := h.Info.Config.Options
     numVar := 0
 
     if len(cFields) == 0 {
@@ -252,7 +252,7 @@ func (h *TopHandler) ParseTopHeaders(line string) bool {
 
 func (h *TopHandler) Parse(data string) {
     if strings.Contains(data, "Processes") {
-        h.Info.Upload(h.Vars)
+        UploadKV(h.Vars, h.Info)
         h.Reset()
     }
 

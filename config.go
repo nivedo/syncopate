@@ -13,7 +13,7 @@ type (
     Config struct {
         Key       string
         Group     string
-        Fields    []map[string]string
+        Options   []map[string]string
         Mode      string
         Help      bool
         Debug     bool

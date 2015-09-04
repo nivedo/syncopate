@@ -35,7 +35,7 @@ func (h *CsvHandler) Help() {
 
 func (h *CsvHandler) Load() {
     defaultNumCols := 5
-    cFields := h.Info.Config.Fields
+    cFields := h.Info.Config.Options
 
     if len(cFields) == 0 {
         for i := 0; i < defaultNumCols; i++ {
@@ -81,6 +81,6 @@ func (h *CsvHandler) ParseLine(data string) {
 
 func (h *CsvHandler) Parse(data string) {
     h.ParseLine(data)
-    h.Info.Upload(h.Vars)
+    UploadKV(h.Vars, h.Info)
     h.LineCount++
 }

@@ -26,20 +26,32 @@ func NewRegexHandler(info *HandlerInfo) *RegexHandler {
 }
 
 func (h *RegexHandler) Load() {
-    for _,v := range h.Info.Config.Fields {
+    for _,v := range h.Info.Config.Options {
         h.Fields = append(h.Fields, RegexField{Pattern: v["pattern"], Description: v["desc"]})
         log.Printf("[TRACKING] Field: %s\n", v["desc"])
     }
 }
 
 func (h *RegexHandler) Run() {
+    var list KVList
+    rule := NewRuleRegex("CPU usage: {{ cpu_usage_user:%p }} user, {{ cpu_usage_sys:%p }} sys")
+    rule2 := NewRuleRegex("Load Avg: {{ load_1:%f }}, {{ load_2:%f }}, {{ load_3:%f }}")
+    list = make(KVList,10)
     for {
         data := <-h.Info.Data
         //h.Parse(data)
+        /*
         v,l := ExtractRegex(data,"CPU usage: {{ cpu_usage_user:%p }} user, {{ cpu_usage_sys:%p }} sys")
         //v,l := ExtractCSV(data,"{{ $1,3,5,6,2:c1,c3 }}")
         for i,_ := range v {
             fmt.Printf("%s:%s\n",l[i],v[i])
+        }
+        */
+        if(rule.Eval(data, &list, 0) > 0) {
+            fmt.Println(list)
+        }
+        if(rule2.Eval(data, &list, 0) > 0) {
+            fmt.Println(list)
         }
     }
 }

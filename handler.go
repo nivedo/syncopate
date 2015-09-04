@@ -29,6 +29,8 @@ type (
 
 func GetHandler(info *HandlerInfo) Handler {
     switch info.Config.Mode {
+    case "rule":
+        return NewRuleHandler(info)
     case "regex":
         return NewRegexHandler(info)
     case "top":
@@ -54,17 +56,17 @@ func ConvertToValidSeriesKey(rawId string) string {
     return newId
 }
 
-func (m KVList) Print() {
-    fmt.Printf("{ size: %d\n", len(m))
-    for _,v := range m {
+func (list *KVList) Print() {
+    fmt.Printf("{ size: %d\n", len(*list))
+    for _,v := range *list {
         fmt.Printf("%20s: %s\n",v.K,v.V)
     }
     fmt.Println("}")
 }
 
-func (info *HandlerInfo) Upload(m KVList) {
+func UploadKV(list KVList, info *HandlerInfo) {
     now := time.Now().UTC().UnixNano() / int64(time.Microsecond)
-    for _, v := range m {
+    for _, v := range list {
         seriesID := MakeSeriesID(info.Cluster.Token, info.Cluster.Group, v.K)
         info.Events <- SyncEvent{
             SeriesID:    seriesID,
@@ -73,5 +75,4 @@ func (info *HandlerInfo) Upload(m KVList) {
             Time:        now}
     }
 }
-
 
