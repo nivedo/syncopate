@@ -62,11 +62,10 @@ func (h *RuleHandler) Run() {
 }
 
 func (h *RuleHandler) Parse(data string) {
-    for _,rule := range h.Rules {
-        n := rule.Eval(data, &h.Vars, 0)
-        if(n > 0) {
-            UploadKV(h.Vars[:(n-1)], h.Info)
-        }
+    if !h.Group {
+        h.ParseSingle(data)
+    } else {
+        h.ParseGroup(data)
     }
 }
 
@@ -74,8 +73,17 @@ func (h *RuleHandler) AddRule(r Rule) {
     h.Rules = append(h.Rules, r)
 }
 
-func (h *RuleHandler) Eval(line string, vars *KVList) bool {
-    n := h.Rules[h.N].Eval(line, vars, h.Start)
+func (h *RuleHandler) ParseSingle(line string) {
+    for _,rule := range h.Rules {
+        n := rule.Eval(line, &h.Vars, 0)
+        if(n > 0) {
+            UploadKV(h.Vars[:(n-1)], h.Info)
+        }
+    }
+}
+
+func (h *RuleHandler) ParseGroup(line string) {
+    n := h.Rules[h.N].Eval(line, &h.Vars, h.Start)
     if n > 0 {
         // Rule passes, advance to next rule
         h.N++
@@ -84,9 +92,8 @@ func (h *RuleHandler) Eval(line string, vars *KVList) bool {
     if h.N == len(h.Rules) {
         // All rules pass, upload KVList
         h.N = 0
-        return true
+        UploadKV(h.Vars[:(h.N-1)], h.Info)
     }
-    return false
 }
 
 func NewRule(pattern string) Rule {
