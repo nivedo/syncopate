@@ -30,7 +30,9 @@ type (
 func GetHandler(info *HandlerInfo) Handler {
     switch info.Config.Mode {
     case "rule":
-        return NewRuleHandler(info)
+        return NewRuleHandler(info, false)
+    case "batch":
+        return NewRuleHandler(info, true)
     case "regex":
         return NewRegexHandler(info)
     case "top":
