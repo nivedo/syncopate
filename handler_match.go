@@ -8,61 +8,61 @@ import (
 )
 
 /*
- *  Two types of RuleHandlers:
+ *  Two types of MatchHandlers:
  *  ==========================
  *
- *  1) GROUP = false -- for each line, evaluate all given rules and upload on ANY match.
- *  2) GROUP = true  -- for each line, evaluate only rule N until rule N passes, then iterate N++.
+ *  1) BATCH = false -- for each line, evaluate all given rules and upload on ANY match.
+ *  2) BATCH = true  -- for each line, evaluate only rule N until rule N passes, then iterate N++.
  *     Do not upload anything until all rules pass.
  */
 
 type (
-    RuleHandler struct {
+    MatchHandler struct {
         Info  *HandlerInfo
         Vars  KVList
-        Rules []Rule
+        Matchs []Match
         Start int
         N     int
         Batch bool
     }
-    Rule interface {
+    Match interface {
         // Eval inserts elements into vars from vars[start:], returning num elements inserted
         Eval(line string, vars *KVList, start int) int
     }
-    RuleRegex struct {
+    MatchRegex struct {
         Pattern string
         Labels  []string
     }
 )
 
-func NewRuleHandler(info *HandlerInfo, batch bool) *RuleHandler {
-    h := &RuleHandler{Info: info, Start: 0, N: 0, Batch: batch}
+func NewMatchHandler(info *HandlerInfo, batch bool) *MatchHandler {
+    h := &MatchHandler{Info: info, Start: 0, N: 0, Batch: batch}
     h.Load()
     return h
 }
 
-func (h *RuleHandler) Load() {
+func (h *MatchHandler) Load() {
     for _,v := range h.Info.Config.Options {
         if rule, ok := v["match"]; ok {
-            h.AddRule(NewRule(rule))
-            log.Printf("[TRACKING] Rule: %s\n", rule)
+            h.AddMatch(NewMatch(rule))
+            log.Printf("[TRACKING] Match: %s\n", rule)
         }
     }
     h.Vars = make(KVList, 50)
 }
 
-func (h *RuleHandler) Help() {
+func (h *MatchHandler) Help() {
 
 }
 
-func (h *RuleHandler) Run() {
+func (h *MatchHandler) Run() {
     for {
         data := <-h.Info.Data
         h.Parse(data)
     }
 }
 
-func (h *RuleHandler) Parse(data string) {
+func (h *MatchHandler) Parse(data string) {
     if !h.Batch {
         h.ParseSingle(data)
     } else {
@@ -70,12 +70,12 @@ func (h *RuleHandler) Parse(data string) {
     }
 }
 
-func (h *RuleHandler) AddRule(r Rule) {
-    h.Rules = append(h.Rules, r)
+func (h *MatchHandler) AddMatch(r Match) {
+    h.Matchs = append(h.Matchs, r)
 }
 
-func (h *RuleHandler) ParseSingle(line string) {
-    for _,rule := range h.Rules {
+func (h *MatchHandler) ParseSingle(line string) {
+    for _,rule := range h.Matchs {
         n := rule.Eval(line, &h.Vars, 0)
         if(n > 0) {
             UploadKV(h.Vars[:(n-1)], h.Info)
@@ -83,31 +83,31 @@ func (h *RuleHandler) ParseSingle(line string) {
     }
 }
 
-func (h *RuleHandler) ParseBatch(line string) {
-    n := h.Rules[h.N].Eval(line, &h.Vars, h.Start)
+func (h *MatchHandler) ParseBatch(line string) {
+    n := h.Matchs[h.N].Eval(line, &h.Vars, h.Start)
     for n > 0 {
-        // Rule passes, advance to next rule
+        // Match passes, advance to next rule
         h.N++
         h.Start = h.Start + n
-        if h.N == len(h.Rules) {
+        if h.N == len(h.Matchs) {
             // All rules pass, upload KVList
             UploadKV(h.Vars[:(h.Start-1)], h.Info)
             h.N = 0
             h.Start = 0
         }
-        n = h.Rules[h.N].Eval(line, &h.Vars, h.Start)
+        n = h.Matchs[h.N].Eval(line, &h.Vars, h.Start)
     }
 }
 
-func NewRule(pattern string) Rule {
-    return NewRuleRegex(pattern)
+func NewMatch(pattern string) Match {
+    return NewMatchRegex(pattern)
 }
 
-/* Rule Regex 
+/* Match Regex 
  * ==========
  * Example -- CPU usage: {{ cpu_usage_user:%p }} user, {{ cpu_usage_sys:%p }} sys
  */
-func NewRuleRegex(pattern string) *RuleRegex {
+func NewMatchRegex(pattern string) *MatchRegex {
     r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
     tokens := r.FindAllStringSubmatch(pattern, -1)
 
@@ -148,10 +148,10 @@ func NewRuleRegex(pattern string) *RuleRegex {
     r3, _ := regexp.Compile("\\s+")
     result = r3.ReplaceAllString(result, "\\s*")
 
-    return &RuleRegex{Pattern: result, Labels: labels}
+    return &MatchRegex{Pattern: result, Labels: labels}
 }
 
-func (r *RuleRegex) Eval(line string, vars *KVList, start int) int {
+func (r *MatchRegex) Eval(line string, vars *KVList, start int) int {
     index := start
     match, _ := regexp.MatchString(r.Pattern, line)
     if match {
