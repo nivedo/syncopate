@@ -36,7 +36,8 @@ func GetHandler(info *HandlerInfo) Handler {
     case "regex":
         return NewRegexHandler(info)
     case "top":
-        return NewTopHandler(info)
+        return NewMatchHandler(info, true)
+        //return NewTopHandler(info)
     case "csv":
         return NewCsvHandler(info)
     default:

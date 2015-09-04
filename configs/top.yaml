@@ -3,6 +3,8 @@ key: YOUR_API_KEY
 group: testgroup
 mode: batch
 options:
+  - fail: >
+      Processes:
   - match: >
       Processes: 
       {{ proc_total:%d }} total, 
@@ -33,15 +35,14 @@ options:
       {{ mem_regions_shared:%mem }} shared.
   - match: >
       PhysMem:
-      {{ phys_used:%mem }} used (
-      {{ phys_wired:%mem }} wired),
+      {{ phys_used:%mem }} used ({{ phys_wired:%mem }} wired),
       {{ phys_unused:%mem }} unused.
   - match: >
       VM:
       {{ vm_vsize:%mem }} vsize,
       {{ vm_frame_vsize:%mem }} framework vsize,
-      {{ vm_swapins:%d }}(0) swapins,
-      {{ vm_swapouts:%d }}(0) swapouts.
+      {{ vm_swapins:(\d+\(\d+\)) }} swapins,
+      {{ vm_swapouts:(\d+\(\d+\)) }} swapouts.
   - match: >
       Networks:
       packets: {{ net_packets_in:(\d+\/\d+[BKMG]?) }} in,
@@ -51,7 +52,7 @@ options:
       {{ disk_read:(\d+\/\d+[BKMG]?) }} read,
       {{ disk_written:(\d+\/\d+[BKMG]?) }} written.
   - match: >
-      {{ pid:^(\d+) }}
+      {{ pid:(\d+) }}
       {{ command:([\w\.\s]+) }}
       {{ pct_cpu:(\d+.\d+) }}
       {{ time:(\d{2}:\d{2}\.\d{2}) }}

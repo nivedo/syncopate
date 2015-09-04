@@ -18,18 +18,22 @@ import (
 
 type (
     MatchHandler struct {
-        Info  *HandlerInfo
-        Vars  KVList
-        Matches []Match
-        Start int
-        N     int
-        Batch bool
+        Info       *HandlerInfo
+        Vars       KVList
+        Matches    []Match
+        Start      int
+        N          int
+
+        // Batch Parameters
+        Batch      bool
+        FailMatch  Match
     }
     Match interface {
-        // Eval inserts elements into vars from vars[start:], returning num elements inserted
-        Eval(line string, vars *KVList, start int) int
+        // Eval inserts elements into vars from vars[start:], returns num elements inserted
+        Eval(line string, vars *KVList, start int) (int, bool)
     }
     MatchRegex struct {
+        Desc    string
         Pattern string
         Labels  []string
     }
@@ -43,9 +47,14 @@ func NewMatchHandler(info *HandlerInfo, batch bool) *MatchHandler {
 
 func (h *MatchHandler) Load() {
     for _,v := range h.Info.Config.Options {
-        if rule, ok := v["match"]; ok {
-            h.AddMatch(NewMatch(rule))
-            log.Printf("[TRACKING] Match: %s\n", rule)
+        if desc, ok := v["match"]; ok {
+            m := NewMatch(desc)
+            h.AddMatch(m)
+            log.Printf("[TRACKING] %s\n", desc)
+        }
+        if fail, ok := v["fail"]; ok {
+            h.FailMatch = NewMatch(fail)
+            log.Printf("[FAILURE CONDITION] %s\n", fail)
         }
     }
     h.Vars = make(KVList, 100)
@@ -66,7 +75,11 @@ func (h *MatchHandler) Parse(data string) {
     if !h.Batch {
         h.ParseSingle(data)
     } else {
-        h.ParseBatch(data)
+        if !h.ParseBatch(data) {
+            if h.BatchFailed(data) {
+                log.Fatalf("[BatchHandler] FAILED match %+v with line %s", h.Matches[h.N], data)
+            }
+        }
     }
 }
 
@@ -74,19 +87,24 @@ func (h *MatchHandler) AddMatch(r Match) {
     h.Matches = append(h.Matches, r)
 }
 
-func (h *MatchHandler) ParseSingle(line string) {
+func (h *MatchHandler) ParseSingle(line string) bool {
+    success := false
     for _,rule := range h.Matches {
-        n := rule.Eval(line, &h.Vars, 0)
+        n, _ := rule.Eval(line, &h.Vars, 0)
         if(n > 0) {
             UploadKV(h.Vars[:(n-1)], h.Info)
+            success = true
         }
     }
+    return success
 }
 
-func (h *MatchHandler) ParseBatch(line string) {
-    n := h.Matches[h.N].Eval(line, &h.Vars, h.Start)
+func (h *MatchHandler) ParseBatch(line string) bool {
+    success := false
+    n, _ := h.Matches[h.N].Eval(line, &h.Vars, h.Start)
     for n > 0 {
         // Match passes, advance to next rule
+        success = true
         h.N++
         h.Start = h.Start + n
         if h.N == len(h.Matches) {
@@ -95,23 +113,29 @@ func (h *MatchHandler) ParseBatch(line string) {
             h.N = 0
             h.Start = 0
         }
-        n = h.Matches[h.N].Eval(line, &h.Vars, h.Start)
+        n, _ = h.Matches[h.N].Eval(line, &h.Vars, h.Start)
     }
+    return success
 }
 
-func NewMatch(pattern string) Match {
-    return NewMatchRegex(pattern)
+func (h *MatchHandler) BatchFailed(line string) bool {
+    _, failed := h.FailMatch.Eval(line, nil, -1)
+    return failed
+}
+
+func NewMatch(desc string) Match {
+    return NewMatchRegex(desc)
 }
 
 /* Match Regex 
  * ==========
  * Example -- CPU usage: {{ cpu_usage_user:%p }} user, {{ cpu_usage_sys:%p }} sys
  */
-func NewMatchRegex(pattern string) *MatchRegex {
+func NewMatchRegex(desc string) *MatchRegex {
     r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
-    tokens := r.FindAllStringSubmatch(pattern, -1)
+    tokens := r.FindAllStringSubmatch(desc, -1)
 
-    result := pattern
+    result := desc
     var labels []string
 
     subs := make(map[string]string)
@@ -141,6 +165,10 @@ func NewMatchRegex(pattern string) *MatchRegex {
     // Escape Special Characters
     result = regexp.QuoteMeta(result)
 
+    // Treat newlines as "match all"
+    r2, _ := regexp.Compile("[\\t\\n\\r]+")
+    result = r2.ReplaceAllString(result, ".*")
+
     // Replace Subtokens
     for k,v := range subs {
         result = strings.Replace(result, k, v, 1)
@@ -150,10 +178,10 @@ func NewMatchRegex(pattern string) *MatchRegex {
     r3, _ := regexp.Compile("\\s+")
     result = r3.ReplaceAllString(result, "\\s*")
 
-    return &MatchRegex{Pattern: result, Labels: labels}
+    return &MatchRegex{Desc: desc, Pattern: result, Labels: labels}
 }
 
-func (r *MatchRegex) Eval(line string, vars *KVList, start int) int {
+func (r *MatchRegex) Eval(line string, vars *KVList, start int) (int, bool) {
     index := start
     match, _ := regexp.MatchString(r.Pattern, line)
     if match {
@@ -164,7 +192,7 @@ func (r *MatchRegex) Eval(line string, vars *KVList, start int) int {
             log.Println((*vars)[index])
             index++
         }
-        return index - start
+        return index - start, true
     }
-    return 0
+    return 0, match
 }

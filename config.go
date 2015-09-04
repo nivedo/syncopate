@@ -33,8 +33,10 @@ func LoadConfig() *Config {
 
     // 2nd Priority: YAML Config
     source, err := ioutil.ReadFile(*configFile)
+    configNotFound := false
     if err != nil {
         log.Printf("Could not locate %s. Running without config...",*configFile)
+        configNotFound = true
     }
     err = yaml.Unmarshal(source, config)
     if err != nil {
@@ -56,6 +58,20 @@ func LoadConfig() *Config {
     }
     if *debug {
         config.Debug = true
+    }
+
+    // Try embedded static configs
+    if configNotFound {
+        switch config.Mode {
+        case "top":
+            src, _ := Asset("configs/top.yaml")
+            log.Println(src)
+            err = yaml.Unmarshal(src, config)
+            if err != nil {
+                log.Fatal(err)
+            }
+            log.Println(config)
+        }
     }
 
     // Check if config is legal
