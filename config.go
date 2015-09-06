@@ -20,10 +20,23 @@ type (
     }
 )
 
+func ParseCommand(cmd string, config *Config) {
+    tokens := strings.Fields(cmd)
+    switch tokens[0] {
+    case "top":
+        config.Mode = "top"
+        break
+    default:
+        config.Mode = "regex"
+        break
+    }
+}
+
 func LoadConfig() *Config {
     config := &Config{Help: false, Key: os.Getenv("SYNCOPATE_KEY"), Group: os.Getenv("SYNCOPATE_GROUP")}
 
     configFile := flag.String("c", "syncopate.yaml", "Syncopate YAML config")
+    runCmd  := flag.String("r", "", "Command to run")
     key     := flag.String("k", "", "API key")
     group   := flag.String("g", "", "Group name")
     mode    := flag.String("m", "", "Mode: (regex, csv, ...)")
@@ -44,14 +57,18 @@ func LoadConfig() *Config {
     }
 
     // 1st Priority: Command Line
+    // Command to run takes precedence over mode
+    if *runCmd != "" {
+        ParseCommand(*runCmd, config)
+    } else if *mode != "" {
+        config.Mode = strings.ToLower(*mode)
+    }
+
     if *key != "" {
         config.Key = *key
     }
     if *group != "" {
         config.Group = *group
-    }
-    if *mode != "" {
-        config.Mode = strings.ToLower(*mode)
     }
     if *help {
         config.Help = true

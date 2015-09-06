@@ -14,9 +14,9 @@ import (
 const (
     SALT_ID = "1V3S#F"
     SALT_KEY = "AB#*FP"
-    //SERVER_URL = "http://localhost:8080"
-    //SERVER_URL = "http://api.blub.io:8080"
-    SERVER_URL = "http://52.8.222.214:8080"
+    //SERVER_URL = "http://52.8.222.214:8080"
+    SERVER_URL = "http://localhost:8080"
+    // SERVER_URL = "http://api.blub.io:32818"
 )
 
 /* Profiling utility */
