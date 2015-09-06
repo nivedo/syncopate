@@ -20,8 +20,16 @@ type (
     }
 )
 
-func ParseCommand(cmd string) string {
-    return ""
+func ParseCommand(cmd string, config *Config) {
+    tokens := strings.Fields(cmd)
+    switch tokens[0] {
+    case "top":
+        config.Mode = "top"
+        break
+    default:
+        config.Mode = "regex"
+        break
+    }
 }
 
 func LoadConfig() *Config {
@@ -51,7 +59,7 @@ func LoadConfig() *Config {
     // 1st Priority: Command Line
     // Command to run takes precedence over mode
     if *runCmd != "" {
-        config.Mode = ParseCommand(*runCmd)
+        ParseCommand(*runCmd, config)
     } else if *mode != "" {
         config.Mode = strings.ToLower(*mode)
     }
