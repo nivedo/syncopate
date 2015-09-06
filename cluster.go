@@ -53,7 +53,11 @@ func StartCluster(config *Config, events chan SyncEvent) *Cluster {
 }
 
 func Read(cfg *Config, data chan string) {
-	r := bufio.NewReader(os.Stdin)
+    ReadToBuffer(os.Stdin, data)
+}
+
+func ReadToBuffer(reader io.Reader, data chan string) {
+	r := bufio.NewReader(reader)
 
 	for {
 		line,err := r.ReadString('\n')

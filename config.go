@@ -14,13 +14,15 @@ type (
         Key       string
         Group     string
         Options   []map[string]string
+        Cmd       string
         Mode      string
         Help      bool
         Debug     bool
     }
 )
 
-func ParseCommand(cmd string, config *Config) {
+func (config *Config) SetCommand(cmd string) {
+    config.Cmd = cmd
     tokens := strings.Fields(cmd)
     switch tokens[0] {
     case "top":
@@ -59,7 +61,7 @@ func LoadConfig() *Config {
     // 1st Priority: Command Line
     // Command to run takes precedence over mode
     if *runCmd != "" {
-        ParseCommand(*runCmd, config)
+        config.SetCommand(*runCmd)
     } else if *mode != "" {
         config.Mode = strings.ToLower(*mode)
     }
