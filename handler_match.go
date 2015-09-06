@@ -57,24 +57,28 @@ func (h *MatchHandler) Load() {
         if desc, ok := v["match"]; ok {
             m := NewMatch(desc)
             h.AddMatch(m)
-
-            log.Printf("[MatchHandler] TRACKING %s\n", desc)
-            h.Repeats = append(h.Repeats, 0)
             repeats := 1
 
-            if rep, ok := v["repeat"]; ok {
-                repeats, _ = strconv.Atoi(rep)
-                if repeats > 1 {
-                    h.Repeats[len(h.Repeats)-1] = repeats
-                    log.Printf("[MatchHandler] Repeat %s %d times\n", desc, repeats)
+            if h.Batch {
+                log.Printf("[MatchHandler] TRACKING %s\n", desc)
+                h.Repeats = append(h.Repeats, 0)
+
+                if rep, ok := v["repeat"]; ok {
+                    repeats, _ = strconv.Atoi(rep)
+                    if repeats > 1 {
+                        h.Repeats[len(h.Repeats)-1] = repeats
+                        log.Printf("[MatchHandler] Repeat %s %d times\n", desc, repeats)
+                    }
                 }
             }
 
             numVars = numVars + repeats * m.NumVars()
         }
-        if fail, ok := v["fail"]; ok {
-            h.FailMatch = NewMatch(fail)
-            log.Printf("[MatchHandler] Faliure Condition - %s\n", fail)
+        if h.Batch {
+            if fail, ok := v["fail"]; ok {
+                h.FailMatch = NewMatch(fail)
+                log.Printf("[MatchHandler] Faliure Condition - %s\n", fail)
+            }
         }
     }
     log.Printf("[MatchHandler] Initialized with %d variables.", numVars)

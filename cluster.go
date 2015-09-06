@@ -55,6 +55,7 @@ func StartCluster(config *Config, events chan SyncEvent) *Cluster {
 
 func Read(cfg *Config, data chan string) {
     if len(cfg.Cmd) > 0 {
+        // Run command and pipe stdout to reader
         cmd := exec.Command("ls", "-l")
         stdout, err := cmd.StdoutPipe()
         if err != nil {
@@ -68,6 +69,7 @@ func Read(cfg *Config, data chan string) {
             log.Fatal(err)
         }
     } else {
+        // Pipe stdin to reader
         ReadToBuffer(os.Stdin, data)
     }
 }
