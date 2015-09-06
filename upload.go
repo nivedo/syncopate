@@ -14,8 +14,8 @@ import (
 const (
     SALT_ID = "1V3S#F"
     SALT_KEY = "AB#*FP"
-    //SERVER_URL = "http://localhost:8080"
-    SERVER_URL = "http://api.blub.io:32818"
+    SERVER_URL = "http://localhost:8080"
+    // SERVER_URL = "http://api.blub.io:32818"
 )
 
 func Upload(cluster *Cluster, config *Config) {
