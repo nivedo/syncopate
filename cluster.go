@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 )
 
 type (
@@ -53,7 +54,22 @@ func StartCluster(config *Config, events chan SyncEvent) *Cluster {
 }
 
 func Read(cfg *Config, data chan string) {
-    ReadToBuffer(os.Stdin, data)
+    if len(cfg.Cmd) > 0 {
+        cmd := exec.Command("ls", "-l")
+        stdout, err := cmd.StdoutPipe()
+        if err != nil {
+            log.Fatal(err)
+        }
+        if err := cmd.Start(); err != nil {
+            log.Fatal(err)
+        }
+        ReadToBuffer(stdout, data)
+        if err := cmd.Wait(); err != nil {
+            log.Fatal(err)
+        }
+    } else {
+        ReadToBuffer(os.Stdin, data)
+    }
 }
 
 func ReadToBuffer(reader io.Reader, data chan string) {
