@@ -15,8 +15,15 @@ const (
     SALT_ID = "1V3S#F"
     SALT_KEY = "AB#*FP"
     //SERVER_URL = "http://localhost:8080"
-    SERVER_URL = "http://api.blub.io:32818"
+    //SERVER_URL = "http://api.blub.io:8080"
+    SERVER_URL = "http://52.8.222.214:8080"
 )
+
+/* Profiling utility */
+func Profile(start time.Time, desc string) {
+    t := time.Since(start)
+    log.Printf("[Profile] %s took %s time", desc, t)
+}
 
 func Upload(cluster *Cluster, config *Config) {
     url := fmt.Sprintf("%s/clusters/%s", SERVER_URL, cluster.ID)
@@ -35,7 +42,7 @@ func Upload(cluster *Cluster, config *Config) {
 
     req, err := http.NewRequest("POST", url, bytes.NewBuffer(cjson))
     req.Header.Set("X-Custom-Header", "myvalue")
-    req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
     client := &http.Client{}
     resp, err := client.Do(req)
