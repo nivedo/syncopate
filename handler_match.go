@@ -38,10 +38,17 @@ type (
         Eval(line string) ([]string, []string, bool)
         NumVars() int
     }
+    // Implements Match interface
     MatchRegex struct {
-        Desc    string
-        Pattern string
-        Labels  []string
+        Desc    string      // {{ pcnt:%p }}
+        Pattern string      // ((?:\\d+\\.?\\d*)|(?:\\.\\d+))%
+        Labels  []string    // pcnt
+    }
+    MatchColumns struct {
+        Desc    string      // {{ colname: $1 }}
+        Delims  string      // ",|"
+        Indices []int       // [ 1 ]
+        Labels  []string    // [ "colname" ]
     }
 )
 
@@ -244,6 +251,10 @@ func NewMatchRegex(desc string) *MatchRegex {
     return &MatchRegex{Desc: desc, Pattern: result, Labels: labels}
 }
 
+///////////////////////////////////////////////////////////////////
+// MatchRegex
+///////////////////////////////////////////////////////////////////
+
 func (r *MatchRegex) Eval(line string) ([]string, []string, bool) {
     match, _ := regexp.MatchString(r.Pattern, line)
     if match {
@@ -257,3 +268,34 @@ func (r *MatchRegex) Eval(line string) ([]string, []string, bool) {
 func (r *MatchRegex) NumVars() int {
     return len(r.Labels)
 }
+
+///////////////////////////////////////////////////////////////////
+// MatchColumns
+///////////////////////////////////////////////////////////////////
+
+func (c *MatchColumns) Eval(line string) ([]string, []string, bool) {
+    tokens := strings.FieldsFunc(line, func(r rune) bool {
+        return strings.ContainsRune(c.Delims, r)
+    })
+    numTokens := len(tokens)
+    values := make([]string, numTokens)
+    match := true
+    for i, cindex := range c.Indices {
+        if cindex < numTokens {
+            values[i] = tokens[cindex]
+        } else {
+            match = false
+            break
+        }
+    }
+    if match {
+        return c.Labels, values, true
+    } else {
+        return nil, nil, false
+    }
+}
+
+func (c *MatchColumns) NumVars() int {
+    return len(c.Labels)
+}
+

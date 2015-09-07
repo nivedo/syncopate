@@ -1,11 +1,11 @@
 ---
 options:
   - headers: true
-    delim:
+    delimiters:
     - " "
     - ","
     - "{{%d}}"
-    cols: >
+    columns: >
       {{ $first }}
       {{ second_col:$second }}
       {{ third_col:$3 }}
