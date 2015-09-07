@@ -61,20 +61,20 @@ func Read(cfg *Config, data chan string) {
             // Run on watch timer
             var sleepTime = time.Duration(cfg.CmdWatchSec * 1e9)
             for {
-                RunAndReadToBuffer(cfg.CmdBin, cfg.CmdArgs, data)
+                RunAndReadToBuffer(cfg.CmdBin, cfg.CmdArgs, data, true)
                 time.Sleep(sleepTime)
             }
         } else {
             // Run once
-            RunAndReadToBuffer(cfg.CmdBin, cfg.CmdArgs, data)
+            RunAndReadToBuffer(cfg.CmdBin, cfg.CmdArgs, data, false)
         }
     } else {
         // Pipe stdin to reader
-        ReadToBuffer(os.Stdin, data)
+        ReadToBuffer(os.Stdin, data, false)
     }
 }
 
-func RunAndReadToBuffer(bin string, args []string, data chan string) {
+func RunAndReadToBuffer(bin string, args []string, data chan string, stopAtEOF bool) {
     // Run command and pipe stdout to reader
     cmd := exec.Command(bin, args...)
     stdout, err := cmd.StdoutPipe()
@@ -84,13 +84,13 @@ func RunAndReadToBuffer(bin string, args []string, data chan string) {
     if err := cmd.Start(); err != nil {
         log.Fatal(err)
     }
-    ReadToBuffer(stdout, data)
+    ReadToBuffer(stdout, data, stopAtEOF)
     if err := cmd.Wait(); err != nil {
         log.Fatal(err)
     }
 }
 
-func ReadToBuffer(reader io.Reader, data chan string) {
+func ReadToBuffer(reader io.Reader, data chan string, stopAtEOF bool) {
     r := bufio.NewReader(reader)
 
     for {
@@ -98,6 +98,9 @@ func ReadToBuffer(reader io.Reader, data chan string) {
         data <- line
         if err != nil && err != io.EOF {
             log.Fatal(err)
+        }
+        if stopAtEOF && err == io.EOF {
+            break
         }
     }
 }
