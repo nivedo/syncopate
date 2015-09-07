@@ -17,7 +17,6 @@ type (
         Group       string
         Options     []map[string]string
         CmdWatchSec float64
-        CmdTail     bool
         CmdBin      string
         CmdArgs     []string
         Mode        string
@@ -26,7 +25,10 @@ type (
     }
 )
 
-func (config *Config) InitCommand(cmd string, mode string, watchSec float64) {
+func (config *Config) InitCommand(
+    cmd string,
+    mode string,
+    watchSec float64) {
     config.SetWatchSec(watchSec)
     if cmd != "" {
         runCmd := strings.TrimFunc(cmd, func(r rune) bool {
@@ -53,7 +55,7 @@ func (config *Config) InitCommand(cmd string, mode string, watchSec float64) {
             }
             break
         case "df":
-            config.SetRequiredWatchSec(2.0)
+            // config.SetRequiredWatchSec(2.0)
             break
         case "du":
             config.SetRequiredWatchSec(2.0)
@@ -63,7 +65,12 @@ func (config *Config) InitCommand(cmd string, mode string, watchSec float64) {
                 // Only one token in command
                 fname := tokens[0]
                 if _, err := os.Stat(fname); err == nil {
-                    // Token is file
+                    // Token is file, tail file
+                    config.CmdBin = "tail"
+                    config.CmdArgs = []string{"-f",fname}
+                    config.CmdWatchSec = -1
+
+                    // Check file format
                     ftokens := strings.Split(fname, ".")
                     fsuffix := ftokens[len(ftokens)-1]
                     if fsuffix == "csv" {
