@@ -11,6 +11,7 @@ import (
 type (
     SyncEvent struct {
         Time        int64
+        ID          uint64
         SeriesID    string
         Key         string
         Value       string

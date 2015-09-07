@@ -19,17 +19,13 @@ const (
     // SERVER_URL = "http://api.blub.io:32818"
 )
 
-/* Profiling utility */
-func Profile(start time.Time, desc string) {
-    t := time.Since(start)
-    log.Printf("[Profile] %s took %s time", desc, t)
-}
-
 func Upload(cluster *Cluster, config *Config) {
     url := fmt.Sprintf("%s/clusters/%s", SERVER_URL, cluster.ID)
     if config.Debug {
         log.Println("[UPLOAD] URL:>", url)
     }
+
+if false {
 
     cjson, err := json.Marshal(cluster)
     if err != nil {
@@ -50,6 +46,8 @@ func Upload(cluster *Cluster, config *Config) {
         log.Fatal(err)
     }
     defer resp.Body.Close()
+
+}
 
     for k := range cluster.Series {
         delete(cluster.Series, k)

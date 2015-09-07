@@ -77,6 +77,7 @@ func UploadKV(list KVList, info *HandlerInfo) {
         seriesID := MakeSeriesID(info.Cluster.Token, info.Cluster.Group, v.K)
         info.Events <- SyncEvent{
             SeriesID:    seriesID,
+            ID:          Hash64(seriesID),
             Key:         v.K,
             Value:       v.V,
             Time:        now}
