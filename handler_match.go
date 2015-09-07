@@ -275,7 +275,7 @@ func NewMatchColumns(desc string) *MatchColumns {
     r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
 
-    labels := make([]string, len(tokens))
+    labels  := make([]string, len(tokens))
     indices := make([]int, len(tokens))
 
     for i,token := range tokens {
