@@ -28,10 +28,22 @@ func (config *Config) SetCommand(cmd string) {
     })
     tokens := strings.Fields(runCmd)
     config.CmdBin = tokens[0]
-    config.CmdArgs = tokens[1:len(tokens)]
+    if len(tokens) > 1 {
+        config.CmdArgs = tokens[1:len(tokens)]
+    }
     switch config.CmdBin {
     case "top":
         config.Mode = "top"
+        // Make sure batch mode, if not, add batch mode argument
+        batchMode := false
+        for _, a := range config.CmdArgs {
+            if a == "-l" {
+                batchMode = true
+            }
+        }
+        if !batchMode {
+            config.CmdArgs = append(config.CmdArgs, []string{"-l","0"}...)
+        }
         break
     default:
         config.Mode = "regex"
