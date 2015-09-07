@@ -25,8 +25,6 @@ func Upload(cluster *Cluster, config *Config) {
         log.Println("[UPLOAD] URL:>", url)
     }
 
-if false {
-
     cjson, err := json.Marshal(cluster)
     if err != nil {
         log.Fatal(err)
@@ -46,9 +44,7 @@ if false {
         log.Fatal(err)
     }
     defer resp.Body.Close()
-
-}
-
+    
     for k := range cluster.Series {
         delete(cluster.Series, k)
     }
