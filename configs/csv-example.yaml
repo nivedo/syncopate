@@ -1,9 +1,15 @@
 ---
 key: YOUR_API_KEY
-group: csv
+group: testgroup
 mode: csv
-fields:
-  - pattern: "$0"
-    desc: "es_price"
-  - pattern: "$2"
-    desc: "nq_price"
+options:
+  - headers: true
+    delim:
+    - " "
+    - ","
+    - "{{%d}}"
+    cols: >
+      {{ $first }}
+      {{ second_col:$second }}
+      {{ third_col:$3 }}
+      {{ $4 }}
