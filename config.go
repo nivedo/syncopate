@@ -7,6 +7,8 @@ import (
     "strings"
     "io/ioutil"
     "gopkg.in/yaml.v2"
+    "runtime"
+    "fmt"
 )
 
 type (
@@ -35,7 +37,9 @@ func (config *Config) SetCommand(cmd string) {
     case "top":
         config.Mode = "top"
         // Make sure batch mode, if not, add batch mode argument
+        // TODO: in linux, 
         batchMode := false
+        fmt.Println(runtime.GOOS)
         for _, a := range config.CmdArgs {
             if a == "-l" {
                 batchMode = true
