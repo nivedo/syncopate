@@ -55,9 +55,11 @@ func (config *Config) InitCommand(
             }
             break
         case "df":
+            config.Mode = "df"
             // config.SetRequiredWatchSec(2.0)
             break
         case "du":
+            config.Mode = "du"
             config.SetRequiredWatchSec(2.0)
             break
         default:
