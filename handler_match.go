@@ -211,11 +211,7 @@ func NewMatch(desc string, option Option_t) Match {
     case "match":
         return NewMatchRegex(desc)
     case "columns":
-        if delims, ok := option["delimiters"]; ok {
-            return NewMatchColumns(desc, delims)
-        } else {
-            return NewMatchColumns(desc, ",")
-        }
+        return NewMatchColumns(desc, option)
     default:
         log.Fatal("Unknown match type.")
         return NewMatchRegex(desc)
@@ -296,7 +292,11 @@ func (r *MatchRegex) NumVars() int {
 // MatchColumns
 ///////////////////////////////////////////////////////////////////
 
-func NewMatchColumns(desc string, delimiters string) *MatchColumns {
+func NewMatchColumns(desc string, option Option_t) *MatchColumns {
+    delimiters := ","
+    if delims, ok := option["delimiters"]; ok {
+        delimiters = delims
+    }
     r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
 
