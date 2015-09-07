@@ -8,9 +8,9 @@ options:
   - match: >
       Filesystem 
       {{ fs_blocks:%d }}-blocks
-  - repeat: 3
+  - repeat: 4
     match: >
-      {{ disk:([\/\w\s]+) }}
+      {{ disk:((?:map )?[\w\/\-]+) }}
       {{ total_size:%d }}
       {{ used_size:%d }}
       {{ avail_size:%d }}

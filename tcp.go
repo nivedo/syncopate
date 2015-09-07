@@ -130,6 +130,7 @@ func (t *TCPHeader) Flush() {
 
 func (t *TCPHeader) Marshal() []byte {
     buf := new(bytes.Buffer)
+
     out := buf.Bytes()
     return out
 }
