@@ -22,7 +22,10 @@ type (
 )
 
 func (config *Config) SetCommand(cmd string) {
-    config.Cmd = cmd
+    runCmd := strings.TrimFunc(cmd, func(r rune) bool {
+        return r == '"' || r == '\''
+    })
+    config.Cmd = runCmd
     tokens := strings.Fields(cmd)
     switch tokens[0] {
     case "top":

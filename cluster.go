@@ -6,6 +6,7 @@ import (
     "log"
     "os"
     "os/exec"
+    "strings"
 )
 
 type (
@@ -56,7 +57,10 @@ func StartCluster(config *Config, events chan SyncEvent) *Cluster {
 func Read(cfg *Config, data chan string) {
     if len(cfg.Cmd) > 0 {
         // Run command and pipe stdout to reader
-        cmd := exec.Command(cfg.Cmd)
+        tokens := strings.Fields(cfg.Cmd)
+        bin := tokens[0]
+        args := tokens[1:len(tokens)]
+        cmd := exec.Command(bin, args...)
         stdout, err := cmd.StdoutPipe()
         if err != nil {
             log.Fatal(err)
