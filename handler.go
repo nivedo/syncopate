@@ -33,7 +33,6 @@ func GetHandler(info *HandlerInfo) Handler {
     case "csv":
         return NewMatchHandler(info, false)
     case "batch":
-        return NewMatchHandler(info, true)
     case "top":
     case "df":
         return NewMatchHandler(info, true)
