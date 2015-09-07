@@ -8,6 +8,7 @@ import (
     "io/ioutil"
     "gopkg.in/yaml.v2"
     "runtime"
+    "math"
 )
 
 type (
@@ -15,6 +16,7 @@ type (
         Key       string
         Group     string
         Options   []map[string]string
+        WatchSec  float64
         CmdBin    string
         CmdArgs   []string
         Mode      string
@@ -65,16 +67,24 @@ func (config *Config) SetRequiredArgument(requiredToken string, requiredArgs []s
     }
 }
 
+func (config *Config) SetWatchSec(watchSec float64) {
+    if watchSec > 0 {
+        // Minimum watch cycle time is 0.2 seconds
+        config.WatchSec = math.Max(watchSec, 0.2)
+    }
+}
+
 func LoadConfig() *Config {
     config := &Config{Help: false, Key: os.Getenv("SYNCOPATE_KEY"), Group: os.Getenv("SYNCOPATE_GROUP")}
 
-    configFile := flag.String("c", "syncopate.yaml", "Syncopate YAML config")
-    runCmd  := flag.String("r", "", "Command to run")
-    key     := flag.String("k", "", "API key")
-    group   := flag.String("g", "", "Group name")
-    mode    := flag.String("m", "", "Mode: (regex, csv, ...)")
-    help    := flag.Bool("help", false, "Show mode usage")
-    debug   := flag.Bool("debug", false, "Debug output")
+    configFile  := flag.String("c", "syncopate.yaml", "Syncopate YAML config")
+    runCmd      := flag.String("r", "", "Command to run")
+    watchSec    := flag.Float64("w", -1.0, "Watch cycle time (in seconds)")
+    key         := flag.String("k", "", "API key")
+    group       := flag.String("g", "", "Group name")
+    mode        := flag.String("m", "", "Mode: (regex, csv, ...)")
+    help        := flag.Bool("help", false, "Show mode usage")
+    debug       := flag.Bool("debug", false, "Debug output")
     flag.Parse()
 
     // 2nd Priority: YAML Config
@@ -91,6 +101,7 @@ func LoadConfig() *Config {
 
     // 1st Priority: Command Line
     // Command to run takes precedence over mode
+    config.SetWatchSec(*watchSec)
     if *runCmd != "" {
         config.SetCommand(*runCmd)
     } else if *mode != "" {
