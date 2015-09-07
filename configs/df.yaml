@@ -1,0 +1,20 @@
+---
+key: YOUR_API_KEY
+group: testgroup
+mode: batch
+options:
+  - fail: >
+      Filesystem
+  - match: >
+      Filesystem 
+      {{ fs_blocks:%d }}-blocks
+  - repeat: 3
+    match: >
+      {{ disk:([\/\w\s]+) }}
+      {{ total_size:%d }}
+      {{ used_size:%d }}
+      {{ avail_size:%d }}
+      {{ capacity:%p }}
+      {{ iused:%d }}
+      {{ ifree:%d }}
+      {{ pcnt_iused:%p }}

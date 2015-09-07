@@ -6,6 +6,7 @@ import (
     "log"
     "os"
     "os/exec"
+    "time"
 )
 
 type (
@@ -55,23 +56,37 @@ func StartCluster(config *Config, events chan SyncEvent) *Cluster {
 }
 
 func Read(cfg *Config, data chan string) {
-    if len(cfg.Cmd) > 0 {
-        // Run command and pipe stdout to reader
-        cmd := exec.Command(cfg.Cmd)
-        stdout, err := cmd.StdoutPipe()
-        if err != nil {
-            log.Fatal(err)
-        }
-        if err := cmd.Start(); err != nil {
-            log.Fatal(err)
-        }
-        ReadToBuffer(stdout, data)
-        if err := cmd.Wait(); err != nil {
-            log.Fatal(err)
+    if len(cfg.CmdBin) > 0 {
+        if cfg.CmdWatchSec > 0 {
+            // Run on watch timer
+            var sleepTime = time.Duration(cfg.CmdWatchSec * 1e9)
+            for {
+                RunAndReadToBuffer(cfg.CmdBin, cfg.CmdArgs, data)
+                time.Sleep(sleepTime)
+            }
+        } else {
+            // Run once
+            RunAndReadToBuffer(cfg.CmdBin, cfg.CmdArgs, data)
         }
     } else {
         // Pipe stdin to reader
         ReadToBuffer(os.Stdin, data)
+    }
+}
+
+func RunAndReadToBuffer(bin string, args []string, data chan string) {
+    // Run command and pipe stdout to reader
+    cmd := exec.Command(bin, args...)
+    stdout, err := cmd.StdoutPipe()
+    if err != nil {
+        log.Fatal(err)
+    }
+    if err := cmd.Start(); err != nil {
+        log.Fatal(err)
+    }
+    ReadToBuffer(stdout, data)
+    if err := cmd.Wait(); err != nil {
+        log.Fatal(err)
     }
 }
 
