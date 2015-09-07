@@ -62,7 +62,7 @@ func (h *MatchHandler) Load() {
     numVars := 0
     for _,v := range h.Info.Config.Options {
         if desc, ok := v["match"]; ok {
-            m := NewMatch(desc)
+            m := NewMatch(desc, v)
             h.AddMatch(m)
             repeats := 1
 
@@ -83,7 +83,7 @@ func (h *MatchHandler) Load() {
         }
         if h.Batch {
             if fail, ok := v["fail"]; ok {
-                h.FailMatch = NewMatch(fail)
+                h.FailMatch = NewMatch(fail, v)
                 log.Printf("[MatchHandler] Faliure Condition - %s\n", fail)
             }
         }
@@ -193,8 +193,33 @@ func (h *MatchHandler) BatchFailed(line string) bool {
     return failed
 }
 
-func NewMatch(desc string) Match {
-    return NewMatchRegex(desc)
+func GetMatchType(option Option_t) string {
+    if _, ok := option["match"]; ok {
+        return "match"
+    } else if _, ok := option["fail"]; ok {
+        return "match"
+    } else if _, ok := option["columns"]; ok {
+        return "columns"
+    } else {
+        log.Fatal("Unable to discern match type, invalid option.")
+        return "match"
+    }
+}
+
+func NewMatch(desc string, option Option_t) Match {
+    switch GetMatchType(option) {
+    case "match":
+        return NewMatchRegex(desc)
+    case "columns":
+        if delims, ok := option["delimiters"]; ok {
+            return NewMatchColumns(desc, delims)
+        } else {
+            return NewMatchColumns(desc, ",")
+        }
+    default:
+        log.Fatal("Unknown match type.")
+        return NewMatchRegex(desc)
+    }
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -271,7 +296,7 @@ func (r *MatchRegex) NumVars() int {
 // MatchColumns
 ///////////////////////////////////////////////////////////////////
 
-func NewMatchColumns(desc string) *MatchColumns {
+func NewMatchColumns(desc string, delimiters string) *MatchColumns {
     r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
 
@@ -297,7 +322,7 @@ func NewMatchColumns(desc string) *MatchColumns {
 
     return &MatchColumns{
         Desc:       desc,
-        Delims:     "",
+        Delims:     delimiters,
         Indices:    indices,
         Labels:     labels}
 }

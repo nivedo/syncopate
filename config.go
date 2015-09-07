@@ -12,10 +12,11 @@ import (
 )
 
 type (
+    Option_t map[string]string
     Config struct {
         Key         string
         Group       string
-        Options     []map[string]string
+        Options     []Option_t
         CmdWatchSec float64
         CmdBin      string
         CmdArgs     []string
