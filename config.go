@@ -165,6 +165,14 @@ func LoadConfig() *Config {
             if err != nil {
                 log.Fatal(err)
             }
+            break
+        case "df":
+            src, _ := Asset("configs/df.yaml")
+            err = yaml.Unmarshal(src, config)
+            if err != nil {
+                log.Fatal(err)
+            }
+            break
         }
     }
 
