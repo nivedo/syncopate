@@ -57,6 +57,19 @@ func (config *Config) SetCommandMode(cmd string, mode string) {
             config.SetRequiredWatchSec(2.0)
             break
         default:
+            if len(tokens) == 1 {
+                // Only one token in command
+                fname := tokens[0]
+                if _, err := os.Stat(fname); err == nil {
+                    // Token is file
+                    ftokens := strings.Split(fname, ".")
+                    fsuffix := ftokens[len(ftokens)-1]
+                    if fsuffix == "csv" {
+                        config.Mode = "csv"
+                        break
+                    }
+                }
+            }
             config.Mode = "regex"
             break
         }
