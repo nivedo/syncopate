@@ -46,22 +46,16 @@ func (config *Config) InitCommand(
             switch runtime.GOOS {
             case "darwin":
                 config.SetRequiredArgument("-l", []string{"-l","0"})
-                break
             case "linux":
                 config.SetRequiredArgument("-b", []string{"-b"})
-                break
             default:
-                break
             }
-            break
         case "df":
             config.Mode = "df"
             config.SetRequiredWatchSec(2.0)
-            break
         case "du":
             config.Mode = "du"
             config.SetRequiredWatchSec(2.0)
-            break
         default:
             if len(tokens) == 1 {
                 // Only one token in command
@@ -82,7 +76,6 @@ func (config *Config) InitCommand(
                 }
             }
             config.Mode = "match"
-            break
         }
     } else if mode != "" {
         config.Mode = strings.ToLower(mode)
@@ -165,14 +158,12 @@ func LoadConfig() *Config {
             if err != nil {
                 log.Fatal(err)
             }
-            break
         case "df":
             src, _ := Asset("configs/df.yaml")
             err = yaml.Unmarshal(src, config)
             if err != nil {
                 log.Fatal(err)
             }
-            break
         }
     }
 
