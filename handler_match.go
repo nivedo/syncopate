@@ -81,7 +81,7 @@ func (h *MatchHandler) Load() {
             }
         }
     }
-    log.Printf("[MatchHandler] Initialized with %d variables.", numVars)
+    log.Printf("[MatchHandler] Initialized with %d variables, %d matches.", numVars, len(h.Matches))
     h.Runs = make([]int, len(h.Matches))
     h.Vars = make(KVList, numVars)
 }

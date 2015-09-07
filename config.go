@@ -169,14 +169,30 @@ func LoadConfig() *Config {
     }
 
     // Check if config is legal
-    if !config.ok() {
+    if !config.IsValid() {
         log.Fatalf("Illegal Config: %+v", config)
     }
 
     return config
 }
 
-func (c *Config) ok() bool {
-    return c.Key != "" && c.Group != "" && c.Mode != "";
+func (c *Config) IsValid() bool {
+    if c.Key == "" {
+        log.Fatal("Missing key.")
+        return false
+    }
+    if c.Group == "" {
+        log.Fatal("Missing group.")
+        return false
+    }
+    if c.Mode == "" {
+        log.Fatal("Missing mode.")
+        return false
+    }
+    if len(c.Options) == 0 {
+        log.Fatal("No options specified.")
+        return false
+    }
+    return true
 }
 
