@@ -53,6 +53,7 @@ type (
 )
 
 func NewMatchHandler(info *HandlerInfo, batch bool) *MatchHandler {
+    log.Println("hello")
     h := &MatchHandler{Info: info, VarIndex: 0, MatchIndex: 0, Batch: batch}
     h.Load()
     return h
