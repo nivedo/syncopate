@@ -8,7 +8,6 @@ import (
     "io/ioutil"
     "gopkg.in/yaml.v2"
     "runtime"
-    "fmt"
 )
 
 type (
@@ -37,21 +36,32 @@ func (config *Config) SetCommand(cmd string) {
     case "top":
         config.Mode = "top"
         // Make sure batch mode, if not, add batch mode argument
-        // TODO: in linux, 
-        batchMode := false
-        fmt.Println(runtime.GOOS)
-        for _, a := range config.CmdArgs {
-            if a == "-l" {
-                batchMode = true
-            }
-        }
-        if !batchMode {
-            config.CmdArgs = append(config.CmdArgs, []string{"-l","0"}...)
+        switch runtime.GOOS {
+        case "darwin":
+            config.SetRequiredArgument("-l", []string{"-l","0"})
+            break
+        case "linux":
+            config.SetRequiredArgument("-b", []string{"-b"})
+            break
+        default:
+            break
         }
         break
     default:
         config.Mode = "regex"
         break
+    }
+}
+
+func (config *Config) SetRequiredArgument(requiredToken string, requiredArgs []string) {
+    hasRequired := false
+    for _, a := range config.CmdArgs {
+        if a == requiredToken {
+            hasRequired = true
+        }
+    }
+    if !hasRequired {
+        config.CmdArgs = append(config.CmdArgs, requiredArgs...)
     }
 }
 
