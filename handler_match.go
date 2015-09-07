@@ -79,7 +79,7 @@ func (h *MatchHandler) Load() {
                 }
             }
 
-            numVars = numVars + repeats * m.NumVars()
+            numVars += repeats * m.NumVars()
         }
         if h.Batch {
             if fail, ok := v["fail"]; ok {
