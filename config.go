@@ -25,33 +25,43 @@ type (
     }
 )
 
-func (config *Config) SetCommand(cmd string) {
-    runCmd := strings.TrimFunc(cmd, func(r rune) bool {
-        return r == '"' || r == '\''
-    })
-    tokens := strings.Fields(runCmd)
-    config.CmdBin = tokens[0]
-    if len(tokens) > 1 {
-        config.CmdArgs = tokens[1:len(tokens)]
-    }
-    switch config.CmdBin {
-    case "top":
-        config.Mode = "top"
-        // Make sure batch mode, if not, add batch mode argument
-        switch runtime.GOOS {
-        case "darwin":
-            config.SetRequiredArgument("-l", []string{"-l","0"})
+func (config *Config) SetCommandMode(cmd string, mode string) {
+    if cmd != "" {
+        runCmd := strings.TrimFunc(cmd, func(r rune) bool {
+            return r == '"' || r == '\''
+        })
+        tokens := strings.Fields(runCmd)
+        config.CmdBin = tokens[0]
+        if len(tokens) > 1 {
+            config.CmdArgs = tokens[1:len(tokens)]
+        }
+        switch config.CmdBin {
+        case "top":
+            config.Mode = "top"
+            // Make sure batch mode, if not, add batch mode argument
+            switch runtime.GOOS {
+            case "darwin":
+                config.SetRequiredArgument("-l", []string{"-l","0"})
+                break
+            case "linux":
+                config.SetRequiredArgument("-b", []string{"-b"})
+                break
+            default:
+                break
+            }
             break
-        case "linux":
-            config.SetRequiredArgument("-b", []string{"-b"})
+        case "df":
+            config.SetRequiredWatchSec(2.0)
+            break
+        case "du":
+            config.SetRequiredWatchSec(2.0)
             break
         default:
+            config.Mode = "regex"
             break
         }
-        break
-    default:
-        config.Mode = "regex"
-        break
+    } else if mode != "" {
+        config.Mode = strings.ToLower(mode)
     }
 }
 
@@ -71,6 +81,12 @@ func (config *Config) SetWatchSec(watchSec float64) {
     if watchSec > 0 {
         // Minimum watch cycle time is 0.2 seconds
         config.WatchSec = math.Max(watchSec, 0.2)
+    }
+}
+
+func (config *Config) SetRequiredWatchSec(watchSec float64) {
+    if config.WatchSec <= 0 {
+        config.SetWatchSec(watchSec)
     }
 }
 
@@ -102,11 +118,7 @@ func LoadConfig() *Config {
     // 1st Priority: Command Line
     // Command to run takes precedence over mode
     config.SetWatchSec(*watchSec)
-    if *runCmd != "" {
-        config.SetCommand(*runCmd)
-    } else if *mode != "" {
-        config.Mode = strings.ToLower(*mode)
-    }
+    config.SetCommandMode(*runCmd, *mode)
 
     if *key != "" {
         config.Key = *key
