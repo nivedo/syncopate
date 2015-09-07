@@ -197,10 +197,12 @@ func NewMatch(desc string) Match {
     return NewMatchRegex(desc)
 }
 
-/* Match Regex 
- * ==========
- * Example -- CPU usage: {{ cpu_usage_user:%p }} user, {{ cpu_usage_sys:%p }} sys
- */
+///////////////////////////////////////////////////////////////////
+// MatchRegex
+// ----------
+// Example -- CPU usage: {{ cpu_usage_user:%p }} user, {{ cpu_usage_sys:%p }} sys
+///////////////////////////////////////////////////////////////////
+
 func NewMatchRegex(desc string) *MatchRegex {
     r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
@@ -251,10 +253,6 @@ func NewMatchRegex(desc string) *MatchRegex {
     return &MatchRegex{Desc: desc, Pattern: result, Labels: labels}
 }
 
-///////////////////////////////////////////////////////////////////
-// MatchRegex
-///////////////////////////////////////////////////////////////////
-
 func (r *MatchRegex) Eval(line string) ([]string, []string, bool) {
     match, _ := regexp.MatchString(r.Pattern, line)
     if match {
@@ -272,6 +270,38 @@ func (r *MatchRegex) NumVars() int {
 ///////////////////////////////////////////////////////////////////
 // MatchColumns
 ///////////////////////////////////////////////////////////////////
+
+func NewMatchColumns(desc string) *MatchColumns {
+    r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
+    tokens := r.FindAllStringSubmatch(desc, -1)
+
+    labels := make([]string, len(tokens))
+    indices := make([]int, len(tokens))
+
+    for i,token := range tokens {
+        labels[i] = strings.TrimSpace(token[1])
+        rule := strings.TrimSpace(token[2])
+        reg, _ := regexp.Compile("^\\$[0-9]+$")
+        if reg.Match([]byte(rule)) {
+            // Matches $column_index pattern
+            num, err := strconv.ParseInt(rule[1:], 10, 64)
+            if err == nil {
+                indices[i] = int(num)
+            } else {
+                log.Fatalf("%s not a valid column rule.", rule)
+            }
+        } else {
+            log.Fatalf("%s not a valid column rule.", rule)
+        }
+    }
+
+    return &MatchColumns{
+        Desc:       desc,
+        Delims:     "",
+        Indices:    indices,
+        Labels:     labels}
+}
+
 
 func (c *MatchColumns) Eval(line string) ([]string, []string, bool) {
     tokens := strings.FieldsFunc(line, func(r rune) bool {
