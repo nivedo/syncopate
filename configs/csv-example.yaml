@@ -1,7 +1,4 @@
 ---
-key: YOUR_API_KEY
-group: testgroup
-mode: csv
 options:
   - headers: true
     delim:
