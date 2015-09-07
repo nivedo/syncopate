@@ -81,7 +81,7 @@ func (config *Config) InitCommand(
                     }
                 }
             }
-            config.Mode = "regex"
+            config.Mode = "match"
             break
         }
     } else if mode != "" {
@@ -122,7 +122,7 @@ func LoadConfig() *Config {
     watchSec    := flag.Float64("w", -1.0, "Watch cycle time (in seconds)")
     key         := flag.String("k", "", "API key")
     group       := flag.String("g", "", "Group name")
-    mode        := flag.String("m", "", "Mode: (regex, csv, ...)")
+    mode        := flag.String("m", "", "Mode: (csv, top, ...)")
     help        := flag.Bool("help", false, "Show mode usage")
     debug       := flag.Bool("debug", false, "Debug output")
     flag.Parse()

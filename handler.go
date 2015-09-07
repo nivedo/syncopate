@@ -33,8 +33,6 @@ func GetHandler(info *HandlerInfo) Handler {
         return NewMatchHandler(info, false)
     case "batch":
         return NewMatchHandler(info, true)
-    case "regex":
-        return NewRegexHandler(info)
     case "top":
     case "df":
         return NewMatchHandler(info, true)
