@@ -14,7 +14,8 @@ type (
         Key       string
         Group     string
         Options   []map[string]string
-        Cmd       string
+        CmdBin    string
+        CmdArgs   []string
         Mode      string
         Help      bool
         Debug     bool
@@ -25,9 +26,10 @@ func (config *Config) SetCommand(cmd string) {
     runCmd := strings.TrimFunc(cmd, func(r rune) bool {
         return r == '"' || r == '\''
     })
-    config.Cmd = runCmd
-    tokens := strings.Fields(cmd)
-    switch tokens[0] {
+    tokens := strings.Fields(runCmd)
+    config.CmdBin = tokens[0]
+    config.CmdArgs = tokens[1:len(tokens)]
+    switch config.CmdBin {
     case "top":
         config.Mode = "top"
         break
