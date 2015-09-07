@@ -13,15 +13,16 @@ import (
 
 type (
     Config struct {
-        Key       string
-        Group     string
-        Options   []map[string]string
-        WatchSec  float64
-        CmdBin    string
-        CmdArgs   []string
-        Mode      string
-        Help      bool
-        Debug     bool
+        Key         string
+        Group       string
+        Options     []map[string]string
+        CmdWatchSec float64
+        CmdTail     bool
+        CmdBin      string
+        CmdArgs     []string
+        Mode        string
+        Help        bool
+        Debug       bool
     }
 )
 
@@ -93,12 +94,12 @@ func (config *Config) SetRequiredArgument(requiredToken string, requiredArgs []s
 func (config *Config) SetWatchSec(watchSec float64) {
     if watchSec > 0 {
         // Minimum watch cycle time is 0.2 seconds
-        config.WatchSec = math.Max(watchSec, 0.2)
+        config.CmdWatchSec = math.Max(watchSec, 0.2)
     }
 }
 
 func (config *Config) SetRequiredWatchSec(watchSec float64) {
-    if config.WatchSec <= 0 {
+    if config.CmdWatchSec <= 0 {
         config.SetWatchSec(watchSec)
     }
 }
