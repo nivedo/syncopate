@@ -34,10 +34,11 @@ type (
         Runs       []int
         Repeats    []int
         FailMatch  Match
+        LineCount  int
     }
     Match interface {
         // Eval returns an array of labels, values, and match success
-        Eval(line string) ([]string, []string, bool)
+        Eval(line string, h *MatchHandler) ([]string, []string, bool)
         NumVars() int
     }
     // Implements Match interface
@@ -47,10 +48,11 @@ type (
         Labels  []string    // pcnt
     }
     MatchColumns struct {
-        Desc    string      // {{ colname: $1 }}
-        Delims  string      // ",|"
-        Indices []int       // [ 1 ]
-        Labels  []string    // [ "colname" ]
+        Desc        string      // {{ colname: $1 }}
+        Delims      string      // ",|"
+        Indices     []int       // [ 1 ]
+        Labels      []string    // [ "colname" ]
+        HasHeader   bool
     }
 )
 
@@ -120,6 +122,7 @@ func (h *MatchHandler) Parse(data string) {
             }
         }
     }
+    h.LineCount++
 }
 
 func (h *MatchHandler) AddMatch(r Match) {
@@ -140,7 +143,7 @@ func (h *MatchHandler) AddValues(keys []string, values []string) int {
 
 func (h *MatchHandler) Eval(line string, matchIndex int) int {
     rule := h.Matches[matchIndex]
-    keys, vals, _ := rule.Eval(line)
+    keys, vals, _ := rule.Eval(line, h)
 
     // Repeated Rules, add suffix
     if h.Batch && h.Repeats[h.MatchIndex] > 0 {
@@ -196,7 +199,7 @@ func (h *MatchHandler) ParseBatch(line string) bool {
 }
 
 func (h *MatchHandler) BatchFailed(line string) bool {
-    _, _, failed := h.FailMatch.Eval(line)
+    _, _, failed := h.FailMatch.Eval(line, h)
     return failed
 }
 
@@ -281,7 +284,7 @@ func (h *MatchHandler) NewMatchRegex(desc string) *MatchRegex {
     return &MatchRegex{Desc: desc, Pattern: result, Labels: labels}
 }
 
-func (r *MatchRegex) Eval(line string) ([]string, []string, bool) {
+func (r *MatchRegex) Eval(line string, h *MatchHandler) ([]string, []string, bool) {
     match, _ := regexp.MatchString(r.Pattern, line)
     if match {
         reg, _ := regexp.Compile(r.Pattern)
@@ -331,9 +334,11 @@ func (h *MatchHandler) NewMatchColumns(desc string, option Option_t) *MatchColum
         delimiters = delims
     }
     headerIndexMap := make(map[string]int)
-    headerIndexExists := false
+    hasHeaderIndex := false
+    hasHeader := false
     if headers, ok := option["headers"]; ok && strings.ToLower(headers) == "true"{
-        headerIndexExists = h.GetColumnIndexMapFromHeaders(delimiters, headerIndexMap)
+        hasHeader = true
+        hasHeaderIndex = h.GetColumnIndexMapFromHeaders(delimiters, headerIndexMap)
     }
 
     r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
@@ -354,7 +359,7 @@ func (h *MatchHandler) NewMatchColumns(desc string, option Option_t) *MatchColum
             } else {
                 log.Fatalf("%s not a valid column rule.", rule)
             }
-        } else if headerIndexExists && rule[0] == '$' {
+        } else if hasHeaderIndex && rule[0] == '$' {
             // (2) Matches ${alpha numeric} pattern
             if index, ok := headerIndexMap[rule[1:]]; ok {
                 indices[i] = index
@@ -370,11 +375,16 @@ func (h *MatchHandler) NewMatchColumns(desc string, option Option_t) *MatchColum
         Desc:       desc,
         Delims:     delimiters,
         Indices:    indices,
-        Labels:     labels}
+        Labels:     labels,
+        HasHeader:  hasHeader}
 }
 
 
-func (c *MatchColumns) Eval(line string) ([]string, []string, bool) {
+func (c *MatchColumns) Eval(line string, h *MatchHandler) ([]string, []string, bool) {
+    // Ignore headers
+    if c.HasHeader {
+
+    }
     l := strings.TrimSpace(line)
     // log.Printf("Match columns eval: %s, delims=%s", l, c.Delims)
     // log.Println(c)
