@@ -341,28 +341,40 @@ func (h *MatchHandler) NewMatchColumns(desc string, option Option_t) *MatchColum
         hasHeaderIndex = h.GetColumnIndexMapFromHeaders(delimiters, headerIndexMap)
     }
 
-    r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
+    r, _ := regexp.Compile("\\{\\{\\s*(\\w*):?\\$([\\w\\d\\-]+)\\s*\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
+    // log.Print(tokens)
 
     labels  := make([]string, len(tokens))
     indices := make([]int, len(tokens))
 
     for i,token := range tokens {
-        labels[i] = strings.TrimSpace(token[1])
+        // log.Print(token)
+        label := strings.TrimSpace(token[1])
         rule := strings.TrimSpace(token[2])
-        reg, _ := regexp.Compile("^\\$[0-9]+$")
+        reg, _ := regexp.Compile("^[0-9]+$")
         if reg.Match([]byte(rule)) {
             // (1) Matches ${numeric} pattern
-            num, err := strconv.ParseInt(rule[1:], 10 /* base 10 */, 64 /* int64 */)
+            num, err := strconv.ParseInt(rule, 10 /* base 10 */, 64 /* int64 */)
             if err == nil {
                 indices[i] = int(num)
+                if len(label) > 0 {
+                    labels[i] = label
+                } else {
+                    labels[i] = "column" + rule
+                }
             } else {
                 log.Fatalf("%s not a valid column rule.", rule)
             }
-        } else if hasHeaderIndex && rule[0] == '$' {
+        } else if hasHeaderIndex {
             // (2) Matches ${alpha numeric} pattern
-            if index, ok := headerIndexMap[rule[1:]]; ok {
+            if index, ok := headerIndexMap[rule]; ok {
                 indices[i] = index
+                if len(label) > 0 {
+                    labels[i] = label
+                } else {
+                    labels[i] = rule
+                }
             } else {
                 log.Fatalf("%s does not exist in header index map.", rule)
             }
