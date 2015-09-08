@@ -80,6 +80,10 @@ func (h *MatchHandler) Load() {
             }
 
             numVars += repeats * m.NumVars()
+        } else if desc, ok := v["columns"]; ok {
+            m := NewMatch(desc, v)
+            h.AddMatch(m)
+            numVars += m.NumVars()
         }
         if h.Batch {
             if fail, ok := v["fail"]; ok {
@@ -137,7 +141,7 @@ func (h *MatchHandler) Eval(line string, matchIndex int) int {
     keys, vals, _ := rule.Eval(line)
 
     // Repeated Rules, add suffix
-    if h.Repeats[h.MatchIndex] > 0 {
+    if h.Batch && h.Repeats[h.MatchIndex] > 0 {
         skeys := make([]string, len(keys))
         suffix := h.Runs[h.MatchIndex]
         for i,_ := range keys {

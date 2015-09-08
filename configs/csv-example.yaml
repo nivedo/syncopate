@@ -1,12 +1,8 @@
 ---
 options:
   - headers: true
-    delimiters:
-    - " "
-    - ","
-    - "{{%d}}"
+    delimiters: ","
     columns: >
-      {{ $first }}
-      {{ second_col:$second }}
-      {{ third_col:$3 }}
-      {{ $4 }}
+      {{ col1:$1 }}
+      {{ second_col:$2 }}
+      {{ column3:$3 }}
