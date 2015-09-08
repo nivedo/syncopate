@@ -128,7 +128,7 @@ func (h *MatchHandler) AddValues(keys []string, values []string) int {
     for i,_ := range values {
         kv := CreateKVPair(keys[i], values[i])
         if h.Info.Config.Debug {
-            log.Println("[MatchHandler] Adding KV:", kv)
+            log.Printf("[MatchHandler] Adding KV: %s, index: %d", kv, h.VarIndex)
         }
         h.Vars[h.VarIndex] = kv
         h.VarIndex++
@@ -149,7 +149,7 @@ func (h *MatchHandler) Eval(line string, matchIndex int) int {
         }
         return h.AddValues(skeys, vals)
     }
-
+    // log.Print(line)
     return h.AddValues(keys, vals)
 }
 
@@ -159,6 +159,7 @@ func (h *MatchHandler) ParseSingle(line string) bool {
         n := h.Eval(line,i)
         if n > 0 {
             UploadKV(h.Vars[:(n-1)], h.Info)
+            h.VarIndex = 0
             success = true
         }
     }
