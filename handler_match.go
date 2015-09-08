@@ -382,8 +382,8 @@ func (h *MatchHandler) NewMatchColumns(desc string, option Option_t) *MatchColum
 
 func (c *MatchColumns) Eval(line string, h *MatchHandler) ([]string, []string, bool) {
     // Ignore headers
-    if c.HasHeader {
-
+    if len(h.Info.Config.CmdBin) > 0 && c.HasHeader && h.LineCount == 0 {
+        return nil, nil, false
     }
     l := strings.TrimSpace(line)
     // log.Printf("Match columns eval: %s, delims=%s", l, c.Delims)
