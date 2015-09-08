@@ -333,7 +333,10 @@ func NewMatchColumns(desc string, option Option_t) *MatchColumns {
 
 
 func (c *MatchColumns) Eval(line string) ([]string, []string, bool) {
-    tokens := strings.FieldsFunc(line, func(r rune) bool {
+    l := strings.TrimSpace(line)
+    // log.Printf("Match columns eval: %s, delims=%s", l, c.Delims)
+    // log.Println(c)
+    tokens := strings.FieldsFunc(l, func(r rune) bool {
         return strings.ContainsRune(c.Delims, r)
     })
     numTokens := len(tokens)
@@ -343,6 +346,7 @@ func (c *MatchColumns) Eval(line string) ([]string, []string, bool) {
         if cindex < numTokens {
             values[i] = tokens[cindex]
         } else {
+            log.Printf("Index request %d for %s exceeds number of columns %d.", cindex, c.Labels[i], numTokens)
             match = false
             break
         }
