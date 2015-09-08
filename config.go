@@ -20,6 +20,7 @@ type (
         CmdWatchSec float64
         CmdBin      string
         CmdArgs     []string
+        CmdFile     string
         Mode        string
         Help        bool
         Debug       bool
@@ -66,6 +67,7 @@ func (config *Config) InitCommand(
                     config.CmdBin = "tail"
                     config.CmdArgs = []string{"-f",fname}
                     config.CmdWatchSec = -1
+                    config.CmdFile = fname
 
                     // Check file format
                     ftokens := strings.Split(fname, ".")

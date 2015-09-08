@@ -4,5 +4,5 @@ options:
     delimiters: ","
     columns: >
       {{ col1:$0 }}
-      {{ second_col:$1 }}
+      {{ second_col:$header2 }}
       {{ column3:$2 }}

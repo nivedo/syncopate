@@ -6,6 +6,8 @@ import (
     "regexp"
     "strings"
     "strconv"
+    "bufio"
+    "os"
 )
 
 /*
@@ -62,7 +64,7 @@ func (h *MatchHandler) Load() {
     numVars := 0
     for _,v := range h.Info.Config.Options {
         if desc, ok := v["match"]; ok {
-            m := NewMatch(desc, v)
+            m := h.NewMatch(desc, v)
             h.AddMatch(m)
             repeats := 1
 
@@ -81,13 +83,13 @@ func (h *MatchHandler) Load() {
 
             numVars += repeats * m.NumVars()
         } else if desc, ok := v["columns"]; ok {
-            m := NewMatch(desc, v)
+            m := h.NewMatch(desc, v)
             h.AddMatch(m)
             numVars += m.NumVars()
         }
         if h.Batch {
             if fail, ok := v["fail"]; ok {
-                h.FailMatch = NewMatch(fail, v)
+                h.FailMatch = h.NewMatch(fail, v)
                 log.Printf("[MatchHandler] Faliure Condition - %s\n", fail)
             }
         }
@@ -211,15 +213,15 @@ func GetMatchType(option Option_t) string {
     }
 }
 
-func NewMatch(desc string, option Option_t) Match {
+func (h *MatchHandler) NewMatch(desc string, option Option_t) Match {
     switch GetMatchType(option) {
     case "match":
-        return NewMatchRegex(desc)
+        return h.NewMatchRegex(desc)
     case "columns":
-        return NewMatchColumns(desc, option)
+        return h.NewMatchColumns(desc, option)
     default:
         log.Fatal("Unknown match type.")
-        return NewMatchRegex(desc)
+        return h.NewMatchRegex(desc)
     }
 }
 
@@ -229,7 +231,7 @@ func NewMatch(desc string, option Option_t) Match {
 // Example -- CPU usage: {{ cpu_usage_user:%p }} user, {{ cpu_usage_sys:%p }} sys
 ///////////////////////////////////////////////////////////////////
 
-func NewMatchRegex(desc string) *MatchRegex {
+func (h *MatchHandler) NewMatchRegex(desc string) *MatchRegex {
     r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
 
@@ -297,11 +299,43 @@ func (r *MatchRegex) NumVars() int {
 // MatchColumns
 ///////////////////////////////////////////////////////////////////
 
-func NewMatchColumns(desc string, option Option_t) *MatchColumns {
+func (h *MatchHandler) GetColumnIndexMapFromHeaders(delimiters string, indexMap map[string]int) bool {
+    // Look for filename from run command
+    filename := h.Info.Config.CmdFile
+    if len(filename) > 0 {
+        file, err := os.Open(filename)
+        if err == nil {
+            scanner := bufio.NewScanner(file)
+            if scanner.Scan() {
+                // Successfuly scanned first line in file
+                line := scanner.Text()
+                log.Printf("%s header: %s", filename, line)
+                headers := strings.FieldsFunc(line, func(r rune) bool {
+                    return strings.ContainsRune(delimiters, r)
+                })
+                for i, ht := range headers {
+                    h := strings.TrimSpace(ht)
+                    indexMap[h] = i
+                }
+                return true
+            }
+        }
+        file.Close()
+    }
+    return false
+}
+
+func (h *MatchHandler) NewMatchColumns(desc string, option Option_t) *MatchColumns {
     delimiters := ","
     if delims, ok := option["delimiters"]; ok {
         delimiters = delims
     }
+    headerIndexMap := make(map[string]int)
+    headerIndexExists := false
+    if headers, ok := option["headers"]; ok && strings.ToLower(headers) == "true"{
+        headerIndexExists = h.GetColumnIndexMapFromHeaders(delimiters, headerIndexMap)
+    }
+
     r, _ := regexp.Compile("\\{\\{\\s*(\\w+):(.+?)\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
 
@@ -313,12 +347,19 @@ func NewMatchColumns(desc string, option Option_t) *MatchColumns {
         rule := strings.TrimSpace(token[2])
         reg, _ := regexp.Compile("^\\$[0-9]+$")
         if reg.Match([]byte(rule)) {
-            // Matches $column_index pattern
-            num, err := strconv.ParseInt(rule[1:], 10, 64)
+            // (1) Matches ${numeric} pattern
+            num, err := strconv.ParseInt(rule[1:], 10 /* base 10 */, 64 /* int64 */)
             if err == nil {
                 indices[i] = int(num)
             } else {
                 log.Fatalf("%s not a valid column rule.", rule)
+            }
+        } else if headerIndexExists && rule[0] == '$' {
+            // (2) Matches ${alpha numeric} pattern
+            if index, ok := headerIndexMap[rule[1:]]; ok {
+                indices[i] = index
+            } else {
+                log.Fatalf("%s does not exist in header index map.", rule)
             }
         } else {
             log.Fatalf("%s not a valid column rule.", rule)
