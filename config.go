@@ -62,6 +62,7 @@ func (config *Config) InitCommand(
             if len(tokens) == 1 {
                 // Only one token in command
                 fname := tokens[0]
+                // TODO: Make sure fname is a file and NOT a binary
                 if _, err := os.Stat(fname); err == nil {
                     // Token is file, tail file
                     config.CmdBin = "tail"
@@ -80,7 +81,9 @@ func (config *Config) InitCommand(
             }
             config.Mode = "match"
         }
-    } else if mode != "" {
+    }
+    // Command-line argument mode takes final precedence
+    if mode != "" {
         config.Mode = strings.ToLower(mode)
     }
 }
@@ -135,22 +138,9 @@ func LoadConfig() *Config {
         log.Fatal(err)
     }
 
-    // 1st Priority: Command Line
-    // Command to run takes precedence over mode
+    // Command to run will set default mode, which can be overridden
+    // as command line argument
     config.InitCommand(*runCmd, *mode, *watchSec)
-
-    if *key != "" {
-        config.Key = *key
-    }
-    if *group != "" {
-        config.Group = *group
-    }
-    if *help {
-        config.Help = true
-    }
-    if *debug {
-        config.Debug = true
-    }
 
     // Try embedded static configs
     if configNotFound {
@@ -168,6 +158,20 @@ func LoadConfig() *Config {
                 log.Fatal(err)
             }
         }
+    }
+
+    // 1st Priority: Command Line
+    if *key != "" {
+        config.Key = *key
+    }
+    if *group != "" {
+        config.Group = *group
+    }
+    if *help {
+        config.Help = true
+    }
+    if *debug {
+        config.Debug = true
     }
 
     // Check if config is legal
