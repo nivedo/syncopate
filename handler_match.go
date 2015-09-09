@@ -54,6 +54,10 @@ type (
         Labels      []string    // [ "colname" ]
         HasHeader   bool
     }
+    MatchTable struct {
+        Desc        string      // {{ pid: @"PID" }}
+        Labels      []string    // [ "pid" ]
+    }
 )
 
 func NewMatchHandler(info *HandlerInfo, batch bool) *MatchHandler {
@@ -210,6 +214,8 @@ func GetMatchType(option Option_t) string {
         return "match"
     } else if _, ok := option["columns"]; ok {
         return "columns"
+    } else if _, ok := option["table"]; ok {
+        return "table"
     } else {
         log.Fatal("Unable to discern match type, invalid option.")
         return "match"
@@ -222,6 +228,8 @@ func (h *MatchHandler) NewMatch(desc string, option Option_t) Match {
         return h.NewMatchRegex(desc)
     case "columns":
         return h.NewMatchColumns(desc, option)
+    case "table":
+        return h.NewMatchTable(desc, option)
     default:
         log.Fatal("Unknown match type.")
         return h.NewMatchRegex(desc)
@@ -424,5 +432,21 @@ func (c *MatchColumns) Eval(line string, h *MatchHandler) ([]string, []string, b
 
 func (c *MatchColumns) NumVars() int {
     return len(c.Labels)
+}
+
+///////////////////////////////////////////////////////////////////
+// MatchTable
+///////////////////////////////////////////////////////////////////
+
+func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchColumns {
+    return nil
+}
+
+func (t *MatchTable) Eval(line string, h *MatchHandler) ([]string, []string, bool) {
+    return nil, nil, false
+}
+
+func (t *MatchTable) NumVars() int {
+    return len(t.Labels)
 }
 
