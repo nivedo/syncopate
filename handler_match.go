@@ -65,6 +65,9 @@ type (
         HeaderPattern   string
         EndPattern      string
         RowBuffer       []string
+        NumRows         int
+        BufferRowIndex  int
+        ParseRowIndex   int
         InTable         bool        // In table
         HasMask         bool        // Col mask initialized
         ColMask         []int
@@ -453,11 +456,20 @@ func (c *MatchColumns) NumVars() int {
 func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
     var headerPattern, endPattern string
     var ok bool
+    numRows := 5    // Default number of rows
     if headerPattern, ok = option["headers"]; !ok {
         log.Fatal("Missing header pattern for table.") 
     }
     if endPattern, ok = option["end"]; !ok {
-        log.Fatal("missing end pattern for table.")
+        log.Fatal("Missing end pattern for table.")
+    }
+    if rows, ok := option["rows"]; ok {
+        num, err := strconv.ParseInt(rows, 10 /* base 10 */, 64 /* int64 */)
+        if err != nil {
+            log.Fatal("Unable to parse \"rows\" option: %s", rows)
+        } else {
+            numRows = int(num)
+        }
     }
     r, _ := regexp.Compile("\\{\\{\\s*(\\w*):?\\@([\\w\\d\\-]+)\\s*\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
@@ -496,15 +508,14 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
         HeaderPattern:  headerPattern,
         EndPattern:     endPattern,
         HasMask:        false,
-        InTable:        false}
+        InTable:        false,
+        NumRows:        numRows,
+        BufferRowIndex: 0,
+        ParseRowIndex:  0}
 }
 
-func (t *MatchTable) ParseRow(line string) {
-
-}
-
-func (t *MatchTable) ParseHeaderForMask(header string) {
-    t.ColMask = make([]int, len(header))
+func (t *MatchTable) ParseRow(line string, labels []string, values []string) {
+    t.ParseRowIndex++
 }
 
 func (t *MatchTable) InitColRange() {
@@ -537,22 +548,25 @@ func (t *MatchTable) ParseRowForMask(line string) {
             t.ColMask[i]++
         }
     }
-    t.RowBuffer = append(t.RowBuffer, line)
 }
 
 func (t *MatchTable) Eval(line string, h *MatchHandler) ([]string, []string, bool) {
     matchHeader, _ := regexp.MatchString(t.HeaderPattern, line)
     if matchHeader {
         t.InTable = true
-        t.ParseHeaderForMask(line)
+        t.BufferRowIndex = 0
+        t.ParseRowIndex = 0
+        t.ColMask = make([]int, len(line))
         return nil, nil, false
     }
+    labels := make([]string, t.NumVars())
+    values := make([]string, t.NumVars())
     if t.InTable {
-        if t.HasMask {
-            t.ParseRow(line)
-        } else {
+        if !t.HasMask {
             t.ParseRowForMask(line)
         }
+        t.RowBuffer[t.BufferRowIndex] = line
+        t.BufferRowIndex++
     }
     matchEnd, _ := regexp.MatchString(t.EndPattern, line)
     if matchEnd {
@@ -560,16 +574,15 @@ func (t *MatchTable) Eval(line string, h *MatchHandler) ([]string, []string, boo
         if !t.HasMask {
             t.InitColRange()
             for _, row := range t.RowBuffer {
-                t.ParseRow(row)
-                // Must return each row kv pair
+                t.ParseRow(row, labels, values)
             }
         }
+        return labels, values, true
     }
-
     return nil, nil, false
 }
 
 func (t *MatchTable) NumVars() int {
-    return len(t.Labels)
+    return len(t.Labels) * t.NumRows
 }
 
