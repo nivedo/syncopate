@@ -106,7 +106,7 @@ func configsDfYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "configs/df.yaml", size: 351, mode: os.FileMode(420), modTime: time.Unix(1441770643, 0)}
+	info := bindataFileInfo{name: "configs/df.yaml", size: 351, mode: os.FileMode(420), modTime: time.Unix(1441770803, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }

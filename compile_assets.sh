@@ -1,0 +1,1 @@
+go-bindata -o assets.go configs
