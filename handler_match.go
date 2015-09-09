@@ -107,6 +107,11 @@ func (h *MatchHandler) Load() {
             m := h.NewMatch(desc, v)
             h.AddMatch(m)
             numVars += m.NumVars()
+        } else if desc, ok := v["table"]; ok {
+            m := h.NewMatch(desc, v)
+            h.AddMatch(m)
+            numVars += m.NumVars()
+            h.Batch = false
         }
         if h.Batch {
             if fail, ok := v["fail"]; ok {
@@ -457,7 +462,7 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
     var headerPattern, endPattern string
     var ok bool
     numRows := 5    // Default number of rows
-    if headerPattern, ok = option["headers"]; !ok {
+    if headerPattern, ok = option["header"]; !ok {
         log.Fatal("Missing header pattern for table.") 
     }
     if endPattern, ok = option["end"]; !ok {
@@ -539,6 +544,7 @@ func (t *MatchTable) InitColRange() {
             log.Fatalf("Invalid table col range, start: %d, end: %d.", r.Start, r.End)
         }
     }
+    log.Print(t.ColRanges)
     t.HasMask = true
 }
 
@@ -557,6 +563,7 @@ func (t *MatchTable) Eval(line string, h *MatchHandler) ([]string, []string, boo
         t.BufferRowIndex = 0
         t.ParseRowIndex = 0
         t.ColMask = make([]int, len(line))
+        t.RowBuffer = make([]string, t.NumRows)
         return nil, nil, false
     }
     labels := make([]string, t.NumVars())
@@ -565,8 +572,10 @@ func (t *MatchTable) Eval(line string, h *MatchHandler) ([]string, []string, boo
         if !t.HasMask {
             t.ParseRowForMask(line)
         }
-        t.RowBuffer[t.BufferRowIndex] = line
-        t.BufferRowIndex++
+        if t.BufferRowIndex < t.NumRows {
+            t.RowBuffer[t.BufferRowIndex] = line
+            t.BufferRowIndex++
+        }
     }
     matchEnd, _ := regexp.MatchString(t.EndPattern, line)
     if matchEnd {
