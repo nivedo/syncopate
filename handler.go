@@ -9,8 +9,9 @@ import (
 
 type (
     KVPair struct {
-        K string
-        V string
+        K     string
+        V     string
+        Force bool
     }
     KVList []KVPair
     Handler interface {
@@ -24,6 +25,7 @@ type (
         Config      *Config
         Data        chan string
         Events      chan SyncEvent
+        KVMap       map[string]string
     }
 )
 
@@ -67,13 +69,19 @@ func (list *KVList) Print() {
 func UploadKV(list KVList, info *HandlerInfo) {
     now := time.Now().UTC().UnixNano() / int64(time.Microsecond)
     for _, v := range list {
-        seriesID := MakeSeriesID(info.Cluster.Token, info.Cluster.Group, v.K)
-        info.Events <- SyncEvent{
-            SeriesID:    seriesID,
-            ID:          Hash64(seriesID),
-            Key:         v.K,
-            Value:       v.V,
-            Time:        now}
+        if v.Force || info.KVMap[v.K] != v.V {
+            if info.Config.Debug {
+                log.Printf("[UploadKV] Uploading KV: %s, %s", v.K, v.V)
+            }
+            seriesID := MakeSeriesID(info.Cluster.Token, info.Cluster.Group, v.K)
+            info.KVMap[v.K] = v.V
+            info.Events <- SyncEvent{
+                SeriesID:    seriesID,
+                ID:          HashSeriesID(info.Cluster.Token, info.Cluster.Group, v.K),
+                Key:         v.K,
+                Value:       v.V,
+                Time:        now}
+        }
     }
 }
 

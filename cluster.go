@@ -13,6 +13,7 @@ type (
     SyncEvent struct {
         Time        int64
         ID          uint64
+        Token       uint32
         SeriesID    string
         Key         string
         Value       string
@@ -48,7 +49,7 @@ func StartCluster(config *Config, events chan SyncEvent) *Cluster {
     data := make(chan string)
     go Read(config, data)
 
-    handlerInfo := &HandlerInfo{Cluster: cluster, Config: config, Data: data, Events: events}
+    handlerInfo := &HandlerInfo{Cluster: cluster, Config: config, Data: data, Events: events, KVMap: make(map[string]string)}
     handler := GetHandler(handlerInfo)
     go handler.Run()
 

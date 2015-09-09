@@ -4,19 +4,19 @@ func main() {
     config := LoadConfig()
 
     events := make(chan SyncEvent, 1)
-    cluster := StartCluster(config, events)
+    StartCluster(config, events)
 
-    up := make(chan bool, 1)
-    go UploadHelper(up)
+    //up := make(chan bool, 1)
+    //go UploadHelper(up)
 
-    //dispatcher := NewDispatcher(config.Key)
+    d := NewDispatcher(config.Key, events)
+    d.Run()
 
+    /*
     changed := false
     for {
         select {
         case sEvent := <-events:
-            //dispatcher.HandleEvent(&sEvent)
-            changed = true
             newEvent := Event{Time: sEvent.Time}
             newEvent.Data = make(map[string]interface{})
             newEvent.Data[sEvent.Key] = sEvent.Value
@@ -27,9 +27,9 @@ func main() {
         case <-up:
             if changed {
                 Upload(cluster, config)
-                //dispatcher.Flush()
                 changed = false
             }
         }
     }
+    */
 }

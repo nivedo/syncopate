@@ -44,7 +44,7 @@ func Upload(cluster *Cluster, config *Config) {
         log.Fatal(err)
     }
     defer resp.Body.Close()
-    
+
     for k := range cluster.Series {
         delete(cluster.Series, k)
     }
