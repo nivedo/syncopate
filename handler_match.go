@@ -64,7 +64,9 @@ type (
         Labels          []string    // [ "pid" ]
         HeaderPattern   string
         EndPattern      string
-        LinesBuffer     []string
+        RowBuffer       []string
+        InTable         bool        // In table
+        HasMask         bool        // Col mask initialized
         ColMask         []int
         ColRanges       []Range_t
     }
@@ -449,7 +451,14 @@ func (c *MatchColumns) NumVars() int {
 ///////////////////////////////////////////////////////////////////
 
 func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
-
+    var headerPattern, endPattern string
+    var ok bool
+    if headerPattern, ok = option["headers"]; !ok {
+        log.Fatal("Missing header pattern for table.") 
+    }
+    if endPattern, ok = option["end"]; !ok {
+        log.Fatal("missing end pattern for table.")
+    }
     r, _ := regexp.Compile("\\{\\{\\s*(\\w*):?\\@([\\w\\d\\-]+)\\s*\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
     // log.Print(tokens)
@@ -481,12 +490,51 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
     }
 
     return &MatchTable{
-        Desc:       desc,
-        Indices:    indices,
-        Labels:     labels}
+        Desc:           desc,
+        Indices:        indices,
+        Labels:         labels,
+        HeaderPattern:  headerPattern,
+        EndPattern:     endPattern,
+        HasMask:        false,
+        InTable:        false}
+}
+
+func (t *MatchTable) ParseRow(line string) {
+
+}
+
+func (t *MatchTable) ParseHeaderForMask(header string) {
+    t.ColMask = make([]int, len(header))
+}
+
+func (t *MatchTable) ParseRowForMask(line string) {
+    for i, r := range line {
+        if i < len(t.ColMask) && r != ' ' {
+            t.ColMask[i]++
+        }
+    }
+    t.RowBuffer = append(t.RowBuffer, line)
 }
 
 func (t *MatchTable) Eval(line string, h *MatchHandler) ([]string, []string, bool) {
+    matchHeader, _ := regexp.MatchString(t.HeaderPattern, line)
+    if matchHeader {
+        t.InTable = true
+        t.ParseHeaderForMask(line)
+        return nil, nil, false
+    }
+    if t.InTable {
+        if t.HasMask {
+            t.ParseRow(line)
+        } else {
+            t.ParseRowForMask(line)
+        }
+    }
+    matchEnd, _ := regexp.MatchString(t.EndPattern, line)
+    if matchEnd {
+        t.InTable = false
+    }
+
     return nil, nil, false
 }
 
