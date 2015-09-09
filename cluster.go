@@ -28,9 +28,9 @@ type (
     }
     Cluster struct {
         Key       string
-        ID        string
+        ID        uint64
         Group     string
-        Token     string
+        Token     uint32
         Series    map[string]*Series
     }
 )
@@ -38,13 +38,13 @@ type (
 func StartCluster(config *Config, events chan SyncEvent) *Cluster {
     cluster := &Cluster{
         Key:   config.Key,
-        ID:    HashID(config.Key),
+        ID:    Hash64(config.Key),
         Group: config.Group,
-        Token: HashKey(config.Key),
+        Token: Hash32(config.Key),
         Series: make(map[string]*Series),
     }
 
-    log.Printf(">>> STARTING CLUSTER (API: %s) (GROUP: %s) (TOKEN: %s)\n\n", cluster.Key, cluster.Group, cluster.Token)
+    log.Printf(">>> STARTING CLUSTER (API: %s) (GROUP: %s) (TOKEN: %d)\n\n", cluster.Key, cluster.Group, cluster.Token)
 
     data := make(chan string)
     go Read(config, data)

@@ -73,10 +73,8 @@ func UploadKV(list KVList, info *HandlerInfo) {
             if info.Config.Debug {
                 log.Printf("[UploadKV] Uploading KV: %s, %s", v.K, v.V)
             }
-            seriesID := MakeSeriesID(info.Cluster.Token, info.Cluster.Group, v.K)
             info.KVMap[v.K] = v.V
             info.Events <- SyncEvent{
-                SeriesID:    seriesID,
                 ID:          HashSeriesID(info.Cluster.Token, info.Cluster.Group, v.K),
                 Key:         v.K,
                 Value:       v.V,

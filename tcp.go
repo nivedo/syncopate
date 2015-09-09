@@ -65,8 +65,8 @@ func Hash32(text string) uint32 {
     return h.Sum32()
 }
 
-func HashSeriesID(token string, group string, desc string) uint64 {
-    strID := fmt.Sprintf("%s.%s.%s", token, group, desc)
+func HashSeriesID(token uint32, group string, desc string) uint64 {
+    strID := fmt.Sprintf("%d.%s.%s", token, group, desc)
     hid := Hash64(strID)
     return hid
 }
