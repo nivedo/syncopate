@@ -53,7 +53,7 @@ options:
       {{ disk_written:(\d+\/\d+[BKMG]?) }} written.
   - repeat: 5
     match: >
-      {{ pid:(\d+) }}
+      {{ pid:(\d+)[+-]? }}
       {{ command:([\w\.\s]+) }}
       {{ pct_cpu:(\d+.\d+) }}
       {{ time:(\d{2}:\d{2}\.\d{2}) }}

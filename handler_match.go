@@ -187,7 +187,7 @@ func (h *MatchHandler) ParseBatch(line string) bool {
         h.MatchIndex++
         if h.MatchIndex == len(h.Matches) {
             // All rules pass, upload KVList
-            UploadKV(h.Vars[:(h.VarIndex-1)], h.Info)
+            UploadKV(h.Vars[:h.VarIndex], h.Info)
             h.MatchIndex = 0
             h.VarIndex = 0
             h.Runs = make([]int, len(h.Runs))
