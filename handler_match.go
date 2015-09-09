@@ -54,9 +54,19 @@ type (
         Labels      []string    // [ "colname" ]
         HasHeader   bool
     }
+    Range_t struct {
+        start   int
+        end     int
+    }
     MatchTable struct {
-        Desc        string      // {{ pid: @"PID" }}
-        Labels      []string    // [ "pid" ]
+        Desc            string      // {{ pid: @"PID" }}
+        Indices         []int       // [ 0 ]
+        Labels          []string    // [ "pid" ]
+        HeaderPattern   string
+        EndPattern      string
+        LinesBuffer     []string
+        ColMask         []int
+        ColRanges       []Range_t
     }
 )
 
@@ -438,8 +448,42 @@ func (c *MatchColumns) NumVars() int {
 // MatchTable
 ///////////////////////////////////////////////////////////////////
 
-func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchColumns {
-    return nil
+func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
+
+    r, _ := regexp.Compile("\\{\\{\\s*(\\w*):?\\@([\\w\\d\\-]+)\\s*\\}\\}")
+    tokens := r.FindAllStringSubmatch(desc, -1)
+    // log.Print(tokens)
+
+    labels  := make([]string, len(tokens))
+    indices := make([]int, len(tokens))
+
+    for i,token := range tokens {
+        // log.Print(token)
+        label := strings.TrimSpace(token[1])
+        rule := strings.TrimSpace(token[2])
+        reg, _ := regexp.Compile("^[0-9]+$")
+        if reg.Match([]byte(rule)) {
+            // (1) Matches @{numeric} pattern
+            num, err := strconv.ParseInt(rule, 10 /* base 10 */, 64 /* int64 */)
+            if err == nil {
+                indices[i] = int(num)
+                if len(label) > 0 {
+                    labels[i] = label
+                } else {
+                    labels[i] = "column" + rule
+                }
+            } else {
+                log.Fatalf("%s not a valid column rule.", rule)
+            }
+        } else {
+            log.Fatalf("%s not a valid column rule.", rule)
+        }
+    }
+
+    return &MatchTable{
+        Desc:       desc,
+        Indices:    indices,
+        Labels:     labels}
 }
 
 func (t *MatchTable) Eval(line string, h *MatchHandler) ([]string, []string, bool) {
