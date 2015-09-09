@@ -55,8 +55,8 @@ type (
         HasHeader   bool
     }
     Range_t struct {
-        start   int
-        end     int
+        Start   int
+        End     int
     }
     MatchTable struct {
         Desc            string      // {{ pid: @"PID" }}
@@ -507,6 +507,30 @@ func (t *MatchTable) ParseHeaderForMask(header string) {
     t.ColMask = make([]int, len(header))
 }
 
+func (t *MatchTable) InitColRange() {
+    sep := true
+    tokenRange := Range_t{Start: -1, End: -1}
+    for i, m := range t.ColMask {
+        if (m == ' ' || i == len(t.ColMask)-1) && !sep {
+            // End
+            tokenRange.End = i
+            t.ColRanges = append(t.ColRanges, tokenRange)
+            sep = true
+        } else if m != ' ' && sep {
+            // Start
+            tokenRange = Range_t{Start: i, End: i}
+            sep = false
+        }
+    }
+    // Check column ranges valid
+    for _, r := range t.ColRanges {
+        if !(r.Start >= 0 && r.End >= 0 && r.Start <= r.End) {
+            log.Fatalf("Invalid table col range, start: %d, end: %d.", r.Start, r.End)
+        }
+    }
+    t.HasMask = true
+}
+
 func (t *MatchTable) ParseRowForMask(line string) {
     for i, r := range line {
         if i < len(t.ColMask) && r != ' ' {
@@ -533,6 +557,13 @@ func (t *MatchTable) Eval(line string, h *MatchHandler) ([]string, []string, boo
     matchEnd, _ := regexp.MatchString(t.EndPattern, line)
     if matchEnd {
         t.InTable = false
+        if !t.HasMask {
+            t.InitColRange()
+            for _, row := range t.RowBuffer {
+                t.ParseRow(row)
+                // Must return each row kv pair
+            }
+        }
     }
 
     return nil, nil, false
