@@ -8,6 +8,7 @@ import (
     "strconv"
     "bufio"
     "os"
+    "unicode/utf8"
 )
 
 /*
@@ -38,7 +39,7 @@ type (
     }
     Match interface {
         // Eval returns an array of labels, values, and match success
-        Eval(line string, h *MatchHandler) ([]string, []string, bool)
+        EvalAndParse(line string, h *MatchHandler) ([]string, []string, bool)
         NumVars() int
     }
     // Implements Match interface
@@ -167,7 +168,7 @@ func (h *MatchHandler) AddValues(keys []string, values []string) int {
 
 func (h *MatchHandler) Eval(line string, matchIndex int) int {
     rule := h.Matches[matchIndex]
-    keys, vals, _ := rule.Eval(line, h)
+    keys, vals, _ := rule.EvalAndParse(line, h)
 
     // Repeated Rules, add suffix
     if h.Batch && h.Repeats[h.MatchIndex] > 0 {
@@ -223,7 +224,7 @@ func (h *MatchHandler) ParseBatch(line string) bool {
 }
 
 func (h *MatchHandler) BatchFailed(line string) bool {
-    _, _, failed := h.FailMatch.Eval(line, h)
+    _, _, failed := h.FailMatch.EvalAndParse(line, h)
     return failed
 }
 
@@ -312,7 +313,7 @@ func (h *MatchHandler) NewMatchRegex(desc string) *MatchRegex {
     return &MatchRegex{Desc: desc, Pattern: result, Labels: labels}
 }
 
-func (r *MatchRegex) Eval(line string, h *MatchHandler) ([]string, []string, bool) {
+func (r *MatchRegex) EvalAndParse(line string, h *MatchHandler) ([]string, []string, bool) {
     match, _ := regexp.MatchString(r.Pattern, line)
     if match {
         reg, _ := regexp.Compile(r.Pattern)
@@ -420,7 +421,7 @@ func (h *MatchHandler) NewMatchColumns(desc string, option Option_t) *MatchColum
 }
 
 
-func (c *MatchColumns) Eval(line string, h *MatchHandler) ([]string, []string, bool) {
+func (c *MatchColumns) EvalAndParse(line string, h *MatchHandler) ([]string, []string, bool) {
     // Ignore headers
     if len(h.Info.Config.CmdBin) > 0 && c.HasHeader && h.LineCount == 0 {
         return nil, nil, false
@@ -524,15 +525,16 @@ func (t *MatchTable) ParseRow(line string, labels []string, values []string) {
 }
 
 func (t *MatchTable) InitColRange() {
+    log.Print(t.ColMask)
     sep := true
     tokenRange := Range_t{Start: -1, End: -1}
     for i, m := range t.ColMask {
-        if (m == ' ' || i == len(t.ColMask)-1) && !sep {
+        if (m == 0 || i == len(t.ColMask)-1) && !sep {
             // End
             tokenRange.End = i
             t.ColRanges = append(t.ColRanges, tokenRange)
             sep = true
-        } else if m != ' ' && sep {
+        } else if m > 0 && sep {
             // Start
             tokenRange = Range_t{Start: i, End: i}
             sep = false
@@ -556,13 +558,17 @@ func (t *MatchTable) ParseRowForMask(line string) {
     }
 }
 
-func (t *MatchTable) Eval(line string, h *MatchHandler) ([]string, []string, bool) {
+func (t *MatchTable) EvalAndParse(line string, h *MatchHandler) ([]string, []string, bool) {
+    log.Print(t)
     matchHeader, _ := regexp.MatchString(t.HeaderPattern, line)
     if matchHeader {
         t.InTable = true
         t.BufferRowIndex = 0
         t.ParseRowIndex = 0
-        t.ColMask = make([]int, len(line))
+        if !t.HasMask {
+            t.ColMask = make([]int, utf8.RuneCountInString(line))
+            log.Print(len(t.ColMask))
+        }
         t.RowBuffer = make([]string, t.NumRows)
         return nil, nil, false
     }
