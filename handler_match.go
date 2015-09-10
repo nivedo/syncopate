@@ -337,7 +337,7 @@ func (r *MatchRegex) NumVars() int {
 
 func (h *MatchHandler) GetColumnIndexMapFromHeaders(delimiters string, indexMap map[string]int) bool {
     // Look for filename from run command
-    filename := h.Info.Config.CmdFile
+    filename := ""//h.Info.Config.CmdFile
     if len(filename) > 0 {
         file, err := os.Open(filename)
         if err == nil {
@@ -427,7 +427,7 @@ func (h *MatchHandler) NewMatchColumns(desc string, option Option_t) *MatchColum
 
 func (c *MatchColumns) EvalAndParse(line string, h *MatchHandler) ([]string, []string, bool) {
     // Ignore headers
-    if len(h.Info.Config.CmdBin) > 0 && c.HasHeader && h.LineCount == 0 {
+    if h.Info.Config.CmdInfo != nil && c.HasHeader && h.LineCount == 0 {
         return nil, nil, false
     }
     l := strings.TrimSpace(line)
