@@ -14,6 +14,9 @@ options:
     end: Processes
     rows: 5
     table: >
-      {{ $0 }}
-      {{ col2:$1 }}
+      {{ $PID }}
       {{ $%CPU }}
+      {{ $#TH }}
+      {{ $#WQ }}
+      {{ $#PORTS }}
+      {{ $STATE }}
