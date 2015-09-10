@@ -31,9 +31,9 @@ type (
 
 func (kv KVPair) String() string {
     if kv.Force {
-        return fmt.Sprintf("{ %s=%s F }", kv.K, kv.V)
+        return fmt.Sprintf("{ %s: %s F }", kv.K, kv.V)
     } else {
-        return fmt.Sprintf("{ %s=%s }", kv.K, kv.V)
+        return fmt.Sprintf("{ %s: %s }", kv.K, kv.V)
     }
 }
 
