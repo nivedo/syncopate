@@ -61,8 +61,8 @@ type (
     }
     MatchTable struct {
         Desc            string      // {{ pid: @"PID" }}
-        Indices         []int       // [ 0 ]
-        Labels          []string    // [ "pid" ]
+        IReqIndices     []int       // [ 0 ]
+        IReqLabels      []string    // [ "pid" ]
         HeaderPattern   string
         EndPattern      string
         RowBuffer       []string
@@ -480,10 +480,10 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
     tokens := r.FindAllStringSubmatch(desc, -1)
     // log.Print(tokens)
 
-    labels  := make([]string, len(tokens))
-    indices := make([]int, len(tokens))
+    var iReqLabels []string
+    var iReqIndices []int
 
-    for i,token := range tokens {
+    for _,token := range tokens {
         // log.Print(token)
         label := strings.TrimSpace(token[1])
         rule := strings.TrimSpace(token[2])
@@ -492,11 +492,11 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
             // (1) Matches @{numeric} pattern
             num, err := strconv.ParseInt(rule, 10 /* base 10 */, 64 /* int64 */)
             if err == nil {
-                indices[i] = int(num)
+                iReqIndices = append(iReqIndices, int(num))
                 if len(label) > 0 {
-                    labels[i] = label
+                    iReqLabels = append(iReqLabels, label)
                 } else {
-                    labels[i] = "column" + rule
+                    iReqLabels = append(iReqLabels, "column" + rule)
                 }
             } else {
                 log.Fatalf("%s not a valid column rule.", rule)
@@ -506,13 +506,10 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
         }
     }
 
-    log.Print(labels)
-    log.Print(indices)
-
     return &MatchTable{
         Desc:           desc,
-        Indices:        indices,
-        Labels:         labels,
+        IReqIndices:    iReqIndices,
+        IReqLabels:     iReqLabels,
         HeaderPattern:  headerPattern,
         EndPattern:     endPattern,
         HasMask:        false,
@@ -607,6 +604,6 @@ func (t *MatchTable) EvalAndParse(line string, h *MatchHandler) ([]string, []str
 }
 
 func (t *MatchTable) NumVars() int {
-    return len(t.Labels) * t.NumRows
+    return len(t.IReqLabels) * t.NumRows
 }
 
