@@ -1,0 +1,19 @@
+---
+mode: batch
+options:
+  - fail: >
+      Processes:
+  - match: >
+      Processes: 
+      {{ proc_total:%d }} total, 
+      {{ proc_running:%d }} running, 
+      {{ proc_stuck:%d }} stuck, 
+      {{ proc_sleeping:%d }} sleeping, 
+      {{ num_threads:%d }} threads
+  - header: PID
+    end: Processes
+    rows: 5
+    table: >
+      {{ $0 }}
+      {{ col2:$1 }}
+      {{ $%CPU }}
