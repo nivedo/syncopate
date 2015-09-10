@@ -481,7 +481,7 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
             numRows = int(num)
         }
     }
-    r, _ := regexp.Compile("\\{\\{\\s*(\\w*):?\\$([\\w\\d\\-]+)\\s*\\}\\}")
+    r, _ := regexp.Compile("\\{\\{\\s*(\\w*):?\\$([^}]+)\\s*\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
     // log.Print(tokens)
 
@@ -516,7 +516,6 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
             } else {
                 hReqLabels = append(hReqLabels, ConvertToValidSeriesKey(rule))
             }
-            log.Fatalf("%s not a valid column rule.", rule)
         }
     }
 
@@ -559,6 +558,7 @@ func (t *MatchTable) ParseRow(line string, rowIndex int, labels []string, values
     }
 
     // Parse requested headers
+    // fmt.Println(t.HReqHeaders)
     for i, header := range t.HReqHeaders {
         if index, ok := t.HeaderMap[header]; ok {
             values[t.VarIndex] = t.GetValueAtIndex(line, index)
