@@ -49,35 +49,33 @@ options:
       Disks:
       {{ disk_read:(\d+\/\d+[BKMG]?) }} read,
       {{ disk_written:(\d+\/\d+[BKMG]?) }} written.
-  - header: PID
-    end: Processes
-    rows: 5
-    table: >
-      {{ $PID }}
-      {{ $COMMAND }}
-      {{ $%CPU }}
-      {{ $TIME }}
-      {{ $#TH }}
-      {{ $#WQ }}
-      {{ $#PORTS }}
-      {{ $MEM }}
-      {{ $PURG }}
-      {{ $CMPRS }}
-      {{ $PGRP }}
-      {{ $PPID }}
-      {{ $STATE }}
-      {{ $BOOSTS }}
-      {{ $%CPU_ME }}
-      {{ $%CPU_OTHRS }}
-      {{ $UID }}
-      {{ $FAULTS }}
-      {{ $COW }}
-      {{ $MSGSENT }}
-      {{ $MSGRECV }}
-      {{ $SYSBSD }}
-      {{ $SYSMACH }}
-      {{ $CSW }}
-      {{ $PAGEINS }}
-      {{ $IDLEW }}
-      {{ $POWER }}
-      {{ $USER }}
+  - repeat: 5
+    match: >
+      {{ pid:(\d+)[+-]? }}
+      {{ command:((?:\w).{1,16}) }}
+      {{ pct_cpu:(\d+.\d+) }}
+      {{ time:(\d{2}(?:\.|:)\d{2}(?:\.|:)\d{2}) }}
+      {{ num_th:([\d\/]+) }}
+      {{ num_wq:([\d\/]+) }}
+      {{ num_ports:(\d+)[+-]? }}
+      {{ mem:%mem }}
+      {{ purg:%mem }}
+      {{ cmprs:%mem }}
+      {{ pgrp:%d }}
+      {{ ppid:%d }}
+      {{ state:%w }}
+      {{ boosts:(\*?\d+\+?\[\d+\+?\]) }}
+      {{ cpu_me:%f }}
+      {{ cpu_others:%f }}
+      {{ uid:%d }}
+      {{ faults:(\d+)\+? }}
+      {{ cow:(\d+)\+? }}
+      {{ msgsent:(\d+)\+? }}
+      {{ msgrecv:(\d+)\+? }}
+      {{ sysbsd:(\d+)\+? }}
+      {{ sysmach:(\d+)\+? }}
+      {{ csw:(\d+)\+? }}
+      {{ pageins:(\d+)\+? }}
+      {{ idlew:(\d+)\+? }}
+      {{ power:(\d+.\d+) }}
+      {{ user:%w }}
