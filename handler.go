@@ -31,9 +31,9 @@ type (
 
 func GetHandler(info *HandlerInfo) Handler {
     switch info.Config.Mode {
-    case "match", "csv":
+    case "match":
         return NewMatchHandler(info, false)
-    case "batch", "top", "df":
+    case "batch":
         return NewMatchHandler(info, true)
     default:
         log.Fatal("ERROR: No mode specified.")
