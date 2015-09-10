@@ -483,8 +483,10 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
     tokens := r.FindAllStringSubmatch(desc, -1)
     // log.Print(tokens)
 
-    var iReqLabels []string
+    var iReqLabels  []string
     var iReqIndices []int
+    var hReqLabels  []string
+    var hReqHeaders []string
 
     for _,token := range tokens {
         // log.Print(token)
@@ -492,7 +494,7 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
         rule := strings.TrimSpace(token[2])
         reg, _ := regexp.Compile("^[0-9]+$")
         if reg.Match([]byte(rule)) {
-            // (1) Matches @{numeric} pattern
+            // (1) Matches ${index} pattern
             num, err := strconv.ParseInt(rule, 10 /* base 10 */, 64 /* int64 */)
             if err == nil {
                 iReqIndices = append(iReqIndices, int(num))
@@ -505,6 +507,13 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
                 log.Fatalf("%s not a valid column rule.", rule)
             }
         } else {
+            // (2) Matches ${header} pattern
+            hReqHeaders = append(hReqHeaders, rule)
+            if len(label) > 0 {
+                hReqLabels = append(hReqLabels, label)
+            } else {
+                hReqLabels = append(hReqLabels, ConvertToValidSeriesKey(rule))
+            }
             log.Fatalf("%s not a valid column rule.", rule)
         }
     }
