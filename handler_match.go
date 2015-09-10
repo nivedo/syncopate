@@ -72,6 +72,7 @@ type (
         HasMask         bool        // Col mask initialized
         ColMask         []int
         ColRanges       []Range_t
+        VarIndex        int
     }
 )
 
@@ -515,10 +516,26 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
         HasMask:        false,
         InTable:        false,
         NumRows:        numRows,
-        BufferRowIndex: 0}
+        BufferRowIndex: 0,
+        VarIndex:       0}
 }
 
 func (t *MatchTable) ParseRow(line string, rowIndex int, labels []string, values []string) {
+    for i, index := range t.IReqIndices {
+        if i < len(t.ColRanges) {
+            r := t.ColRanges[i]
+            if i == len(t.ColRanges)-1 {
+                values[t.VarIndex] = strings.TrimSpace(line[r.Start:])
+            } else {
+                values[t.VarIndex] = strings.TrimSpace(line[r.Start:r.End])
+            }
+            labels[t.VarIndex] = fmt.Sprintf("%s_%d", t.IReqLabels[i], rowIndex)
+        } else {
+            log.Fatal("Request index %d for %s is out of range %d", index, t.IReqLabels[i], len(t.ColRanges))
+        }
+        t.VarIndex++
+    }
+    /* 
     tokens := make([]string, len(t.ColRanges))
     for i, r := range t.ColRanges {
         var s string
@@ -529,7 +546,8 @@ func (t *MatchTable) ParseRow(line string, rowIndex int, labels []string, values
         }
         tokens[i] = s
     }
-    // log.Println(strings.Join(tokens, "|"))
+    log.Println(strings.Join(tokens, "|"))
+    */
 }
 
 func (t *MatchTable) InitColRange() {
@@ -572,6 +590,7 @@ func (t *MatchTable) EvalAndParse(line string, h *MatchHandler) ([]string, []str
     if matchHeader {
         t.InTable = true
         t.BufferRowIndex = 0
+        t.VarIndex = 0
         if !t.HasMask {
             t.ColMask = make([]int, utf8.RuneCountInString(line))
         }
