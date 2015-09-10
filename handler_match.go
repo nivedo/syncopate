@@ -369,7 +369,7 @@ func (h *MatchHandler) NewMatchColumns(desc string, option Option_t) *MatchColum
         hasHeaderIndex = h.GetColumnIndexMapFromHeaders(delimiters, headerIndexMap)
     }
 
-    r, _ := regexp.Compile("\\{\\{\\s*(\\w*):?\\$([\\w\\d\\-]+)\\s*\\}\\}")
+    r, _ := regexp.Compile("\\{\\{\\s*(\\w*):?\\$?([\\w\\d\\-]+)\\s*\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
     // log.Print(tokens)
 
@@ -476,7 +476,7 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
             numRows = int(num)
         }
     }
-    r, _ := regexp.Compile("\\{\\{\\s*(\\w*):?\\@([\\w\\d\\-]+)\\s*\\}\\}")
+    r, _ := regexp.Compile("\\{\\{\\s*(\\w*):?\\$([\\w\\d\\-]+)\\s*\\}\\}")
     tokens := r.FindAllStringSubmatch(desc, -1)
     // log.Print(tokens)
 
@@ -506,6 +506,9 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
         }
     }
 
+    log.Print(labels)
+    log.Print(indices)
+
     return &MatchTable{
         Desc:           desc,
         Indices:        indices,
@@ -529,7 +532,7 @@ func (t *MatchTable) ParseRow(line string, rowIndex int, labels []string, values
         }
         tokens[i] = s
     }
-    // log.Println(strings.Join(tokens, ","))
+    // log.Println(strings.Join(tokens, "|"))
 }
 
 func (t *MatchTable) InitColRange() {
