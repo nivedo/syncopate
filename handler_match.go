@@ -68,7 +68,6 @@ type (
         RowBuffer       []string
         NumRows         int
         BufferRowIndex  int
-        ParseRowIndex   int
         InTable         bool        // In table
         HasMask         bool        // Col mask initialized
         ColMask         []int
@@ -516,15 +515,25 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
         HasMask:        false,
         InTable:        false,
         NumRows:        numRows,
-        BufferRowIndex: 0,
-        ParseRowIndex:  0}
+        BufferRowIndex: 0}
 }
 
-func (t *MatchTable) ParseRow(line string, labels []string, values []string) {
-    t.ParseRowIndex++
+func (t *MatchTable) ParseRow(line string, rowIndex int, labels []string, values []string) {
+    tokens := make([]string, len(t.ColRanges))
+    for i, r := range t.ColRanges {
+        var s string
+        if i == len(t.ColRanges)-1 {
+            s = strings.TrimSpace(line[r.Start:])
+        } else {
+            s = strings.TrimSpace(line[r.Start:r.End])
+        }
+        tokens[i] = s
+    }
+    // log.Println(strings.Join(tokens, ","))
 }
 
 func (t *MatchTable) InitColRange() {
+    log.Print(t.ColMask)
     sep := true
     tokenRange := Range_t{Start: -1, End: -1}
     for i, m := range t.ColMask {
@@ -561,10 +570,8 @@ func (t *MatchTable) EvalAndParse(line string, h *MatchHandler) ([]string, []str
     // log.Print(t.ColMask)
     matchHeader, _ := regexp.MatchString(t.HeaderPattern, line)
     if matchHeader {
-        log.Print("HEADER")
         t.InTable = true
         t.BufferRowIndex = 0
-        t.ParseRowIndex = 0
         if !t.HasMask {
             t.ColMask = make([]int, utf8.RuneCountInString(line))
         }
@@ -574,6 +581,17 @@ func (t *MatchTable) EvalAndParse(line string, h *MatchHandler) ([]string, []str
     labels := make([]string, t.NumVars())
     values := make([]string, t.NumVars())
     if t.InTable {
+        matchEnd, _ := regexp.MatchString(t.EndPattern, line)
+        if matchEnd {
+            t.InTable = false
+            if !t.HasMask {
+                t.InitColRange()
+            }
+            for i, row := range t.RowBuffer {
+                t.ParseRow(row, i, labels, values)
+            }
+            return labels, values, true
+        }
         if !t.HasMask {
             t.ParseRowForMask(line)
         }
@@ -581,17 +599,6 @@ func (t *MatchTable) EvalAndParse(line string, h *MatchHandler) ([]string, []str
             t.RowBuffer[t.BufferRowIndex] = line
             t.BufferRowIndex++
         }
-    }
-    matchEnd, _ := regexp.MatchString(t.EndPattern, line)
-    if matchEnd && t.InTable {
-        t.InTable = false
-        if !t.HasMask {
-            t.InitColRange()
-            for _, row := range t.RowBuffer {
-                t.ParseRow(row, labels, values)
-            }
-        }
-        return labels, values, true
     }
     return nil, nil, false
 }
