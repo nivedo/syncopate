@@ -63,6 +63,8 @@ type (
         Desc            string      // {{ pid: @"PID" }}
         IReqIndices     []int       // [ 0 ]
         IReqLabels      []string    // [ "pid" ]
+        HReqHeaders     []string
+        HReqLabels      []string
         HeaderPattern   string
         EndPattern      string
         RowBuffer       []string
@@ -522,6 +524,8 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
         Desc:           desc,
         IReqIndices:    iReqIndices,
         IReqLabels:     iReqLabels,
+        HReqHeaders:    hReqHeaders,
+        HReqLabels:     hReqLabels,
         HeaderPattern:  headerPattern,
         EndPattern:     endPattern,
         HasMask:        false,
@@ -531,18 +535,36 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
         VarIndex:       0}
 }
 
-func (t *MatchTable) ParseRow(line string, rowIndex int, labels []string, values []string) {
-    for i, index := range t.IReqIndices {
-        if i < len(t.ColRanges) {
-            r := t.ColRanges[i]
-            if i == len(t.ColRanges)-1 {
-                values[t.VarIndex] = strings.TrimSpace(line[r.Start:])
-            } else {
-                values[t.VarIndex] = strings.TrimSpace(line[r.Start:r.End])
-            }
-            labels[t.VarIndex] = fmt.Sprintf("%s_%d", t.IReqLabels[i], rowIndex)
+func (t *MatchTable) GetValueAtIndex(line string, index int) string {
+    var s string
+    if index < len(t.ColRanges) {
+        r := t.ColRanges[index]
+        if index == len(t.ColRanges)-1 {
+            s = strings.TrimSpace(line[r.Start:])
         } else {
-            log.Fatal("Request index %d for %s is out of range %d", index, t.IReqLabels[i], len(t.ColRanges))
+            s = strings.TrimSpace(line[r.Start:r.End])
+        }
+    } else {
+        log.Fatal("Table col index %d is out of range %d", index, len(t.ColRanges))
+    }
+    return s
+}
+
+func (t *MatchTable) ParseRow(line string, rowIndex int, labels []string, values []string) {
+    // Parse requested indices
+    for i, index := range t.IReqIndices {
+        values[t.VarIndex] = t.GetValueAtIndex(line, index)
+        labels[t.VarIndex] = fmt.Sprintf("%s_%d", t.IReqLabels[i], rowIndex)
+        t.VarIndex++
+    }
+
+    // Parse requested headers
+    for i, header := range t.HReqHeaders {
+        if index, ok := t.HeaderMap[header]; ok {
+            values[t.VarIndex] = t.GetValueAtIndex(line, index)
+            labels[t.VarIndex] = fmt.Sprintf("%s_%d", t.HReqLabels[i], rowIndex)
+        } else {
+            log.Fatal("Request header %s for %s does not exist.", header, t.HReqLabels[i])
         }
         t.VarIndex++
     }
@@ -641,6 +663,6 @@ func (t *MatchTable) EvalAndParse(line string, h *MatchHandler) ([]string, []str
 }
 
 func (t *MatchTable) NumVars() int {
-    return len(t.IReqLabels) * t.NumRows
+    return (len(t.IReqLabels) + len(t.HReqLabels)) * t.NumRows
 }
 
