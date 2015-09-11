@@ -1,8 +1,6 @@
 ---
 mode: batch
 options:
-  - fail: >
-      Processes:
   - match: >
       Processes: 
       {{ proc_total:%d }} total, 

@@ -104,12 +104,15 @@ func (f *FilterTable) Prealloc() {
     }
 }
 
-func (f *FilterTable) InitColRange() {
+func (f *FilterTable) InitColRange() int {
+    count := 0
     sep := true
+    f.ColRanges = nil
     tokenRange := ColRange{Start: -1, End: -1}
     for i, m := range f.ColMask {
         if (m == 0 || i == len(f.ColMask)-1) && !sep {
             // End
+            count++
             tokenRange.End = i
             f.ColRanges = append(f.ColRanges, tokenRange)
             sep = true
@@ -125,6 +128,8 @@ func (f *FilterTable) InitColRange() {
             log.Fatalf("Invalid table col range, start: %d, end: %d.", r.Start, r.End)
         }
     }
+
+    return count
 }
 
 func (f *FilterTable) GetHeaderMap() map[string]int {
@@ -188,6 +193,7 @@ func (f *FilterTable) Match(data string) bool {
     if matchHeader {
         f.InTable = true
         f.ColMask = make([]int, utf8.RuneCountInString(data))
+        f.RowBuffer = make([]string, f.NumRows)
         f.HeaderBuffer = data
         f.ParseRowForMask(data)
         return false

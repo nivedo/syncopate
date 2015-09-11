@@ -13,6 +13,8 @@ type (
         Desc    string      // {{ pcnt:%p }}
         Pattern string      // ((?:\\d+\\.?\\d*)|(?:\\.\\d+))%
         Repeat  int
+        NumPass int
+        NumVars int
         Vars    KVList
     }
 )
@@ -47,10 +49,15 @@ func (f *FilterRegex) Match(data string) bool {
     reg, _ := regexp.Compile(f.Pattern)
     allMatch := reg.FindAllStringSubmatch(data, -1)
     if len(allMatch) > 0 {
+        offset := f.NumPass * f.NumVars
         for i,val := range allMatch[0][1:] {
-            f.Vars[i].V = val
+            f.Vars[offset + i].V = val
         }
-        return true
+        f.NumPass++
+        if f.NumPass >= f.Repeat {
+            f.NumPass = 0
+            return true
+        }
     }
     return false
 }
@@ -103,12 +110,19 @@ func (f *FilterRegex) Init() {
     pattern = r3.ReplaceAllString(pattern, "\\s*")
 
     f.Pattern = pattern
+    f.NumVars = len(labels)
 
     // Initialize Vars
     if f.Repeat > 1 {
         // TODO: Handle this later
+        f.Vars = make(KVList, f.Repeat * f.NumVars)
+        for i,label := range labels {
+            for j := 0; j < f.Repeat; j++ {
+                f.Vars[i + j * len(labels)].K = fmt.Sprintf("%s_%d", label, j)
+            }
+        }
     } else {
-        f.Vars = make(KVList, len(labels))
+        f.Vars = make(KVList, f.NumVars)
         for i,label := range labels {
             f.Vars[i].K = label
         }
