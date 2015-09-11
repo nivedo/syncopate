@@ -3,8 +3,15 @@ package main
 import (
     "log"
     "strings"
+    "regexp"
     "fmt"
     "time"
+)
+
+const (
+    S_INT    = 1 << iota
+    S_FLOAT  = 1 << iota
+    S_CHAR   = 1 << iota
 )
 
 type (
@@ -19,6 +26,7 @@ type (
         ID          uint64
         Key         string
         Value       string
+        Type        uint8
     }
     Uploader struct {
         Config      *Config
@@ -27,6 +35,18 @@ type (
         LastVal     map[string]string
     }
 )
+
+func GetType(v string) uint8 {
+    regInt,_ := regexp.Compile("^\\d+$")
+    if regInt.MatchString(v) {
+        return S_INT
+    }
+    regFloat,_ := regexp.Compile("^(?:\\d+\\.?\\d*)$|^(?:\\.\\d+)$")
+    if regFloat.MatchString(v) {
+        return S_FLOAT
+    }
+    return S_CHAR
+}
 
 func NewUploader(config *Config) *Uploader {
     return &Uploader{
@@ -79,14 +99,16 @@ func (u *Uploader) UploadKV(list KVList) {
     for _, v := range list {
         if v.Force || u.LastVal[v.K] != v.V {
             if u.Config.Debug {
-                log.Printf("[UploadKV] Uploading KV: %s, %s", v.K, v.V)
+                log.Printf("[UploadKV] Uploading KV: %s, %s, %d", v.K, v.V, GetType(v.V))
             }
             u.LastVal[v.K] = v.V
             u.Events <- UploadEvent{
                 ID:          HashSeriesID(u.Token, u.Config.Group, v.K),
                 Key:         v.K,
                 Value:       v.V,
-                Time:        now}
+                Time:        now,
+                Type:        GetType(v.V),
+            }
         }
     }
 }

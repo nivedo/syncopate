@@ -15,9 +15,6 @@ import (
 )
 
 const (
-    S_INT    = 1 << iota
-    S_FLOAT  = 1 << iota
-    S_CHAR   = 1 << iota
     SALT_64  = "1V3S#F"
     SALT_32  = "AB#*FP"
     //TCP_URL = "tcp://localhost:40899"
@@ -69,17 +66,6 @@ func HashSeriesID(token uint32, group string, desc string) uint64 {
     strID := fmt.Sprintf("%d.%s.%s", token, group, desc)
     hid := Hash64(strID)
     return hid
-}
-
-func GetType(e *UploadEvent) int {
-    v := e.Value
-    if _, err := strconv.ParseInt(v, 10, 32); err == nil {
-        return S_INT
-    }
-    if _, err := strconv.ParseFloat(v, 32); err == nil {
-        return S_FLOAT
-    }
-    return S_CHAR
 }
 
 // TCPDispatcher
@@ -143,7 +129,7 @@ func (d *TCPDispatcher) GetTCPData(e *UploadEvent) *TCPData {
     if t,ok := d.Headers[e.ID]; ok {
         return t
     }
-    header := &TCPData{ID: e.ID, Type: uint8(GetType(e)), Token: d.ID }
+    header := &TCPData{ID: e.ID, Type: e.Type, Token: d.ID}
     d.Headers[e.ID] = header
 
     return header
@@ -191,6 +177,7 @@ func (d *TCPDispatcher) GetNumBytes() int {
 func (t *TCPData) HandleEvent(e *UploadEvent) {
     buf := new(bytes.Buffer)
     v := e.Value
+    t.Type = e.Type
     switch t.Type {
     case S_INT:
         val, _ := strconv.ParseInt(v, 10, 32)
