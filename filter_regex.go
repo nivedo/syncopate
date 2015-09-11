@@ -39,10 +39,6 @@ func IsFilterRegex(opt Option_t) bool {
     return ok
 }
 
-func (f *FilterRegex) NumVars() int {
-    return len(f.Vars)
-}
-
 func (f *FilterRegex) GetVars() KVList {
     return f.Vars
 }

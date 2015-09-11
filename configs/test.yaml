@@ -43,3 +43,35 @@ options:
       Networks:
       packets: {{ net_packets_in:(\d+\/\d+[BKMG]?) }} in,
       {{ net_packets_out:(\d+\/\d+[BKMG]?) }} out.
+  - header: PID
+    end: Processes
+    rows: 5
+    table: >
+      {{ $PID }}
+      {{ $COMMAND }}
+      {{ $%CPU }}
+      {{ $TIME }}
+      {{ $#TH }}
+      {{ $#WQ }}
+      {{ $#PORTS }}
+      {{ $MEM }}
+      {{ $PURG }}
+      {{ $CMPRS }}
+      {{ $PGRP }}
+      {{ $PPID }}
+      {{ $STATE }}
+      {{ $BOOSTS }}
+      {{ $%CPU_ME }}
+      {{ $%CPU_OTHRS }}
+      {{ $UID }}
+      {{ $FAULTS }}
+      {{ $COW }}
+      {{ $MSGSENT }}
+      {{ $MSGRECV }}
+      {{ $SYSBSD }}
+      {{ $SYSMACH }}
+      {{ $CSW }}
+      {{ $PAGEINS }}
+      {{ $IDLEW }}
+      {{ $POWER }}
+      {{ $USER }}

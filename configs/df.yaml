@@ -1,8 +1,6 @@
 ---
 mode: batch
 options:
-  - fail: >
-      Filesystem
   - match: >
       Filesystem 
       {{ fs_blocks:%d }}-blocks

@@ -13,15 +13,15 @@ type (
         // GetVars() returns a KVList of the last known values
         // to be successfully matched.
         GetVars() KVList
-        // Returns number of variables for the filter,
-        // which should be a fixed number in most cases.
-        NumVars() int
     }
 )
 
 func GetFilter(opt Option_t) Filter {
     if IsFilterRegex(opt) {
         return NewFilterRegex(opt)
+    }
+    if IsFilterTable(opt) {
+        return NewFilterTable(opt)
     }
 
     log.Fatalf("Filter doesn't exist for option %+v", opt)

@@ -22,6 +22,6 @@ func main() {
     // handler.Run()
 
     parserInfo := &ParserInfo{Config: config, Uploader: uploader, Data: data}
-    p := NewAnyParser(parserInfo)
+    p := NewOrderedParser(parserInfo)
     p.Run()
 }
