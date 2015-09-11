@@ -175,30 +175,28 @@ func (d *TCPDispatcher) GetNumBytes() int {
 
 // TCP Header
 func (t *TCPData) HandleEvent(e *UploadEvent) {
-    buf := new(bytes.Buffer)
+    var buf bytes.Buffer
     v := e.Value
     t.Type = e.Type
     switch t.Type {
     case S_INT:
         val, _ := strconv.ParseInt(v, 10, 32)
-        err := binary.Write(buf, binary.LittleEndian, int32(val))
+        err := binary.Write(&buf, binary.LittleEndian, int32(val))
         if err != nil {
             log.Fatal(err)
         }
     case S_FLOAT:
         val, _ := strconv.ParseFloat(v, 32)
-        err := binary.Write(buf, binary.LittleEndian, float32(val))
+        err := binary.Write(&buf, binary.LittleEndian, float32(val))
         if err != nil {
             log.Fatal(err)
         }
     case S_CHAR:
         val := make([]byte, 16)
-        // Force string truncation to 15 chars
-        if len(v) > 15 {
-            v = v[0:14]
-        }
         copy(val, []byte(v))
-        err := binary.Write(buf, binary.LittleEndian, val)
+        // Force string truncation to 15 chars
+        val[14] = 0
+        err := binary.Write(&buf, binary.LittleEndian, val)
         if err != nil {
             log.Fatal(err)
         }
