@@ -527,10 +527,12 @@ func (h *MatchHandler) NewMatchTable(desc string, option Option_t) *MatchTable {
         HReqHeaders:    hReqHeaders,
         HReqLabels:     hReqLabels,
         HeaderPattern:  headerPattern,
+        HeaderMap:      make(map[string]int),
         EndPattern:     endPattern,
         HasMask:        false,
         InTable:        false,
         NumRows:        numRows,
+        RowBuffer:      make([]string, numRows),
         BufferRowIndex: 0,
         VarIndex:       0}
 }
@@ -598,7 +600,7 @@ func (t *MatchTable) InitColRange() {
 }
 
 func (t *MatchTable) InitHeaderMap() {
-    t.HeaderMap = make(map[string]int)
+    // t.HeaderMap = make(map[string]int)
     if len(t.HeaderBuffer) == 0 {
         log.Fatal("Header buffer is empty.")
     }
@@ -634,7 +636,7 @@ func (t *MatchTable) EvalAndParse(line string, h *MatchHandler) ([]string, []str
             t.HeaderBuffer = line
             t.ParseRowForMask(line)
         }
-        t.RowBuffer = make([]string, t.NumRows)
+        // t.RowBuffer = make([]string, t.NumRows)
         return nil, nil, false
     }
     labels := make([]string, t.NumVars())
