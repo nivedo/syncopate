@@ -112,11 +112,12 @@ func (h *MatchHandler) Load() {
             m := h.NewMatch(desc, v)
             h.AddMatch(m)
             numVars += m.NumVars()
+            h.Repeats = append(h.Repeats, make([]int, numVars)...)
         } else if desc, ok := v["table"]; ok {
             m := h.NewMatch(desc, v)
             h.AddMatch(m)
             numVars += m.NumVars()
-            h.Batch = false
+            h.Repeats = append(h.Repeats, make([]int, numVars)...)
         }
         if h.Batch {
             if fail, ok := v["fail"]; ok {
@@ -192,7 +193,7 @@ func (h *MatchHandler) ParseSingle(line string) bool {
     for i,_ := range h.Matches {
         n := h.Eval(line,i)
         if n > 0 {
-            UploadKV(h.Vars[:(n-1)], h.Info)
+            h.Info.Uploader.UploadKV(h.Vars[:(n-1)])
             h.VarIndex = 0
             success = true
         }
@@ -216,7 +217,7 @@ func (h *MatchHandler) ParseBatch(line string) bool {
         h.MatchIndex++
         if h.MatchIndex == len(h.Matches) {
             // All rules pass, upload KVList
-            UploadKV(h.Vars[:h.VarIndex], h.Info)
+            h.Info.Uploader.UploadKV(h.Vars[:h.VarIndex])
             h.MatchIndex = 0
             h.VarIndex = 0
             h.Runs = make([]int, len(h.Runs))

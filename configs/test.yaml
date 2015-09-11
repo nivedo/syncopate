@@ -1,0 +1,45 @@
+---
+mode: batch
+options:
+  - match: >
+      Processes: 
+      {{ proc_total:%d }} total, 
+      {{ proc_running:%d }} running, 
+      {{ proc_stuck:%d }} stuck, 
+      {{ proc_sleeping:%d }} sleeping, 
+      {{ num_threads:%d }} threads
+  - match: >
+      Load Avg: 
+      {{ load_1:%f }}, 
+      {{ load_2:%f }}, 
+      {{ load_3:%f }}
+  - match: >
+      CPU usage: 
+      {{ cpu_usage_user:%p }} user, 
+      {{ cpu_usage_sys:%p }} sys,
+      {{ cpu_usage_idle:%p }} idle
+  - match: >
+      SharedLibs:
+      {{ lib_resident:%mem }} resident,
+      {{ lib_data:%mem }} data,
+      {{ lib_linkedit:%mem }} linkedit.
+  - match: >
+      MemRegions:
+      {{ mem_regions_total:%mem }} total,
+      {{ mem_regions_resident:%mem }} resident,
+      {{ mem_regions_private:%mem }} private,
+      {{ mem_regions_shared:%mem }} shared.
+  - match: >
+      PhysMem:
+      {{ phys_used:%mem }} used ({{ phys_wired:%mem }} wired),
+      {{ phys_unused:%mem }} unused.
+  - match: >
+      VM:
+      {{ vm_vsize:%mem }} vsize,
+      {{ vm_frame_vsize:%mem }} framework vsize,
+      {{ vm_swapins:(\d+\(\d+\)) }} swapins,
+      {{ vm_swapouts:(\d+\(\d+\)) }} swapouts.
+  - match: >
+      Networks:
+      packets: {{ net_packets_in:(\d+\/\d+[BKMG]?) }} in,
+      {{ net_packets_out:(\d+\/\d+[BKMG]?) }} out.

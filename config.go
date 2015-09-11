@@ -14,11 +14,11 @@ type (
     Config struct {
         Key         string
         Group       string
-        Options     []Option_t
-        CmdInfo     *CommandInfo
         Mode        string
         Help        bool
         Debug       bool
+        Options     []Option_t
+        CmdInfo     *CommandInfo
     }
     Args struct {
         Config      string

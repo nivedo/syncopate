@@ -42,12 +42,12 @@ type (
         Data        []byte
     }
     // Dial TCP with cluster ID
-    Dispatcher struct {
+    TCPDispatcher struct {
         ID          uint32
         Socket      mangos.Socket
         Timer       chan bool
         Recon       chan bool
-        Events      chan SyncEvent
+        Events      chan UploadEvent
         Headers     map[uint64]*TCPData
     }
 )
@@ -71,7 +71,7 @@ func HashSeriesID(token uint32, group string, desc string) uint64 {
     return hid
 }
 
-func GetType(e *SyncEvent) int {
+func GetType(e *UploadEvent) int {
     v := e.Value
     if _, err := strconv.ParseInt(v, 10, 32); err == nil {
         return S_INT
@@ -82,13 +82,13 @@ func GetType(e *SyncEvent) int {
     return S_CHAR
 }
 
-// Dispatcher
-func NewDispatcher(key string, events chan SyncEvent) *Dispatcher {
-    return &Dispatcher{ID: Hash32(key), Headers: make(map[uint64]*TCPData), 
+// TCPDispatcher
+func NewTCPDispatcher(key string, events chan UploadEvent) *TCPDispatcher {
+    return &TCPDispatcher{ID: Hash32(key), Headers: make(map[uint64]*TCPData), 
         Recon: make(chan bool, 1), Timer: make(chan bool, 1), Events: events}
 }
 
-func (d *Dispatcher) Connect() {
+func (d *TCPDispatcher) Connect() {
     var err error
 
     if d.Socket, err = push.NewSocket(); err != nil {
@@ -104,17 +104,17 @@ func (d *Dispatcher) Connect() {
 
     d.Socket.SetOption(mangos.OptionSendDeadline, TCP_TIMEOUT)
 
-    log.Printf("Dispatcher connected to TCP: %s", TCP_URL)
+    log.Printf("TCPDispatcher connected to TCP: %s", TCP_URL)
 }
 
-func (d *Dispatcher) StartTimer() {
+func (d *TCPDispatcher) StartTimer() {
     for {
         time.Sleep(TCP_INTERVAL)
         d.Timer <- true
     }
 }
 
-func (d *Dispatcher) Run() {
+func (d *TCPDispatcher) Run() {
     d.Connect()
     defer d.Disconnect()
     go d.StartTimer()
@@ -139,7 +139,7 @@ func (d *Dispatcher) Run() {
     }
 }
 
-func (d *Dispatcher) GetTCPData(e *SyncEvent) *TCPData {
+func (d *TCPDispatcher) GetTCPData(e *UploadEvent) *TCPData {
     if t,ok := d.Headers[e.ID]; ok {
         return t
     }
@@ -149,20 +149,20 @@ func (d *Dispatcher) GetTCPData(e *SyncEvent) *TCPData {
     return header
 }
 
-func (d *Dispatcher) HandleEvent(e *SyncEvent) {
+func (d *TCPDispatcher) HandleEvent(e *UploadEvent) {
     tcp := d.GetTCPData(e)
     tcp.HandleEvent(e)
 }
 
-func (d *Dispatcher) Disconnect() {
+func (d *TCPDispatcher) Disconnect() {
     if d.Socket != nil {
-        log.Println("Dispatcher disconnecting...")
+        log.Println("TCPDispatcher disconnecting...")
         d.Socket.Close()
         d.Socket = nil
     }   
 }
 
-func (d *Dispatcher) AutoReconnect() {
+func (d *TCPDispatcher) AutoReconnect() {
     for {
         time.Sleep(TCP_RECON)
         if d.Socket == nil {
@@ -171,7 +171,7 @@ func (d *Dispatcher) AutoReconnect() {
     }
 }
 
-func (d *Dispatcher) Flush() {
+func (d *TCPDispatcher) Flush() {
     for _,t := range d.Headers {
         if !t.Flush(d.Socket) {
             d.Disconnect()
@@ -179,7 +179,7 @@ func (d *Dispatcher) Flush() {
     }
 }
 
-func (d *Dispatcher) GetNumBytes() int {
+func (d *TCPDispatcher) GetNumBytes() int {
     n := 0
     for _,t := range d.Headers {
         n += len(t.Marshal())
@@ -188,7 +188,7 @@ func (d *Dispatcher) GetNumBytes() int {
 }
 
 // TCP Header
-func (t *TCPData) HandleEvent(e *SyncEvent) {
+func (t *TCPData) HandleEvent(e *UploadEvent) {
     buf := new(bytes.Buffer)
     v := e.Value
     switch t.Type {
