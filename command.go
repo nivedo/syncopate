@@ -18,6 +18,7 @@ const (
     CMD_TAIL
     CMD_CUSTOM
     MIN_WATCH = 200 * time.Millisecond
+    DATA_EOF = "!!SYNCOPATE_EOF"
 )
 
 type (
@@ -98,7 +99,7 @@ func (info *CommandInfo) SetWatchSec(t time.Duration, def time.Duration) {
 }
 
 func StartCommands(info *CommandInfo, data chan string) {
-    if len(info.Bin) > 0 {
+    if info != nil && len(info.Bin) > 0 {
         if info.WatchSec > 0 {
             // Run on watch timer
             go WatchCommand(info, data)
@@ -145,6 +146,7 @@ func ReadToBuffer(reader io.Reader, data chan string, stopAtEOF bool) {
             log.Fatal(err)
         }
         if stopAtEOF && err == io.EOF {
+            data <- DATA_EOF
             break
         }
     }

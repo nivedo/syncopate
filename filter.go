@@ -39,7 +39,7 @@ func GetFilter(opt Option_t) Filter {
 // Example usage: {{ (int) my_var_name:my_var_rule }}
 func GetFilterVars(desc string) []FilterVar {
     var vars []FilterVar
-    r := regexp.MustCompile("\\{\\{\\s*(?:\\((?P<type>\\w+)\\))?(?:\\s*(?P<name>\\w+)\\s*:)?\\s*(?P<rule>.+?)\\}\\}")
+    r := regexp.MustCompile("\\{\\{\\s*(?:\\((?P<type>\\w[\\w\\d]*)\\))?(?:\\s*(?P<name>\\w+)\\s*:)?\\s*(?P<rule>.+?)\\}\\}")
     matches := r.FindAllStringSubmatch(desc,-1)
     
     for _,match := range matches {

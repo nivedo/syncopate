@@ -1,16 +1,17 @@
 ---
-mode: batch
+mode: ordered
 options:
   - match: >
       Filesystem 
-      {{ fs_blocks:%d }}-blocks
-  - repeat: 4
-    match: >
-      {{ disk:((?:map )?[\w\/\-]+) }}
-      {{ total_size:%d }}
-      {{ used_size:%d }}
-      {{ avail_size:%d }}
-      {{ capacity:%p }}
-      {{ iused:%d }}
-      {{ ifree:%d }}
-      {{ pcnt_iused:%p }}
+      {{ fs_blocks:%mem }}-blocks
+  - header: Filesystem
+    rows: 5
+    table: >
+      {{ disk:$1 }}
+      {{ (int) total_size:$2 }}
+      {{ (int) used_size:$3 }}
+      {{ (int) avail_size:$4 }}
+      {{ capacity:$5 }}
+      {{ iused:$6 }}
+      {{ ifree:$7 }}
+      {{ pct_iused:$8 }}

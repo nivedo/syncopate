@@ -19,7 +19,7 @@ type (
     }
 )
 
-///////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
 // FilterRegex
 // ----------
 // RegexFilter parses each blob of text independently by applying
@@ -30,7 +30,7 @@ type (
 //     e.g. MyFloat: {{ my_float:%f }} MyInt: {{ my_int:%d }}
 // (2) Custom Regex (requires ONE capturing parentheses, default S_CHAR)
 //     e.g. MyRegex: {{ (int) my_value:(\d+)[abc]+ }}
-///////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
 
 func NewFilterRegex(opt Option_t) *FilterRegex {
     if !IsFilterRegex(opt) {

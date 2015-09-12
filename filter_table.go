@@ -38,7 +38,10 @@ func NewFilterTable(opt Option_t) *FilterTable {
     f := &FilterTable{
         Desc:           opt["table"],
         HeaderPattern:  opt["header"],
-        EndPattern:     opt["end"],
+        EndPattern:     DATA_EOF,
+    }
+    if end, ok := opt["end"]; ok {
+        f.EndPattern = end
     }
     nrow, err := strconv.ParseInt(opt["rows"], 10 /* base 10 */, 64 /* int64 */)
     if err != nil {
@@ -66,7 +69,7 @@ func (f *FilterTable) Prealloc() {
     for i,v := range fvars {
         label  := v.Name
         rule   := v.Rule
-        reg, _ := regexp.Compile("^$[0-9]+$")
+        reg, _ := regexp.Compile("^\\$[0-9]+$")
 
         if reg.MatchString(rule) {
             // (1) Matches ${index} pattern
@@ -122,6 +125,9 @@ func (f *FilterTable) InitColRange() int {
             tokenRange.End = i
             f.ColRanges = append(f.ColRanges, tokenRange)
             sep = true
+        } else if m == 0 && sep {
+            // Extend range as far as possible to be safe
+            f.ColRanges[count-1].End = i
         } else if m > 0 && sep {
             // Start
             tokenRange = ColRange{Start: i, End: i}
@@ -201,7 +207,6 @@ func (f *FilterTable) Match(data string) bool {
         f.ColMask = make([]int, utf8.RuneCountInString(data))
         f.RowBuffer = make([]string, f.NumRows)
         f.HeaderBuffer = data
-        f.ParseRowForMask(data)
         return false
     }
     if f.InTable {
@@ -218,11 +223,15 @@ func (f *FilterTable) Match(data string) bool {
                 f.ParseRow(row, i)
             }
             return true
-        }
-        f.ParseRowForMask(data)
-        if f.RowIndex < f.NumRows {
-            f.RowBuffer[f.RowIndex] = data
-            f.RowIndex++
+        } else {
+            if strings.TrimSpace(data) == "" {
+                return false
+            }
+            f.ParseRowForMask(data)
+            if f.RowIndex < f.NumRows {
+                f.RowBuffer[f.RowIndex] = data
+                f.RowIndex++
+            }
         }
     }
     return false
@@ -234,9 +243,6 @@ func IsFilterTable(opt Option_t) bool {
     }
     if _, ok := opt["header"]; !ok {
         return false 
-    }
-    if _, ok := opt["end"]; !ok {
-        return false
     }
     if _, ok := opt["rows"]; !ok {
         return false

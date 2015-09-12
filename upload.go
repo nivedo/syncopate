@@ -12,6 +12,7 @@ const (
     S_INT    = 1 << iota
     S_FLOAT  = 1 << iota
     S_CHAR   = 1 << iota
+    S_UNKNOWN = 0
 )
 
 type (
@@ -100,7 +101,13 @@ func (u *Uploader) Start() {
 
 func (u *Uploader) UploadKV(list KVList) {
     now := time.Now().UTC().UnixNano() / int64(time.Microsecond)
+    if u.Config.Debug {
+        log.Printf("[UploadKV] Processing %+v", list)
+    }
     for _, v := range list {
+        if v.Type == S_UNKNOWN {
+            log.Fatalf("Unknown type for var %+v", v)
+        }
         if v.Force || u.LastVal[v.K] != v.V {
             if u.Config.Debug {
                 log.Printf("[UploadKV] Uploading KV: %s, %s, %d", v.K, v.V, v.Type)

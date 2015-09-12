@@ -4,6 +4,7 @@ import (
     "log"
     "flag"
     "os"
+    "strings"
     "time"
     "io/ioutil"
     "gopkg.in/yaml.v2"
@@ -48,6 +49,23 @@ func ParseFlags() *Args {
     return f
 }
 
+func GetTailCommandFlag() string {
+    args := os.Args
+    flag := false
+
+    for i,arg := range args[1:] {
+        if arg[0] == '-' {
+            flag = true
+        } else if flag && arg[0] != '-' {
+            flag = false
+        } else {
+            return strings.Join(args[(i+1):]," ")
+        }
+    }
+
+    return ""
+}
+
 func LoadConfig() *Config {
     config := &Config{Help: false, Key: os.Getenv("SYNCOPATE_KEY"), Group: os.Getenv("SYNCOPATE_GROUP")}
     args := ParseFlags()
@@ -63,6 +81,11 @@ func LoadConfig() *Config {
         if err != nil {
             log.Fatal(err)
         }
+    }
+
+    // Simple command (e.g. syncopate top -o cpu)
+    if args.Command == "" {
+        args.Command = GetTailCommandFlag()
     }
 
     // Command to run will set default mode, which can be overridden

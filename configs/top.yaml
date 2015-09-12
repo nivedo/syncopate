@@ -1,5 +1,5 @@
 ---
-mode: batch
+mode: ordered
 options:
   - match: >
       Processes: 
