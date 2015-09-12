@@ -193,8 +193,12 @@ func (t *TCPData) HandleEvent(e *UploadEvent) {
         }
     case S_CHAR:
         val := make([]byte, 16)
-        copy(val, []byte(v))
         // Force string truncation to 15 chars
+        vBytes := []byte(v)
+        if len(vBytes) > 15 {
+            vBytes = vBytes[:14]
+        }
+        copy(val, vBytes)
         val[14] = 0
         err := binary.Write(&buf, binary.LittleEndian, val)
         if err != nil {

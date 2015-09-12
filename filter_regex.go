@@ -19,6 +19,19 @@ type (
     }
 )
 
+///////////////////////////////////////////////////////////////////
+// FilterRegex
+// ----------
+// RegexFilter parses each blob of text independently by applying
+// a regular expression with multiple fields.
+// 
+// Examples: 
+// (1) Built in parameters 
+//     e.g. MyFloat: {{ my_float:%f }} MyInt: {{ my_int:%d }}
+// (2) Custom Regex (requires ONE capturing parentheses, default S_CHAR)
+//     e.g. MyRegex: {{ (int) my_value:(\d+)[abc]+ }}
+///////////////////////////////////////////////////////////////////
+
 func NewFilterRegex(opt Option_t) *FilterRegex {
     if !IsFilterRegex(opt) {
         log.Fatalf("Illegal NewFilterRegex options: %+v", opt)
@@ -63,34 +76,43 @@ func (f *FilterRegex) Match(data string) bool {
 }
 
 func (f *FilterRegex) Init() {
-    r, _ := regexp.Compile("\\{\\{\\s*(\\w+)\\s*:\\s*(.+?)\\}\\}")
-    tokens := r.FindAllStringSubmatch(f.Desc, -1)
-
+    fvars   := GetFilterVars(f.Desc)
     pattern := f.Desc
-    var labels []string
+    labels  := make([]string, len(fvars))
+    types   := make([]uint8, len(fvars))
+    subs    := make(map[string]string)
 
-    subs := make(map[string]string)
-
-    for i,token := range tokens {
-        labels = append(labels, strings.TrimSpace(token[1]))
-        rule := strings.TrimSpace(token[2])
+    for i,v := range fvars {
+        labels[i] = v.Name
+        types[i]  = S_CHAR // Default to [16]char
         subtoken := fmt.Sprintf("SYNCVAR_%d",i)
-        switch rule {
+
+        // Substitute regex shortcuts
+        switch v.Rule {
         case "%p":
             subs[subtoken] = "((?:\\d+\\.?\\d*)|(?:\\.\\d+))%"
+            types[i] = S_FLOAT
         case "%f":
             subs[subtoken] = "([+-]?(?:\\d+\\.?\\d*)|(?:\\.\\d+))"
+            types[i] = S_FLOAT
         case "%d":
             subs[subtoken] = "(\\d+)"
+            types[i] = S_INT
         case "%w":
             subs[subtoken] = "(\\w+)"
         case "%mem":
             subs[subtoken] = "(\\d+[BKMG]?)[+-]?"
         default:
             // Use user specified regex
-            subs[subtoken] = rule
+            subs[subtoken] = v.Rule
         }
-        pattern = strings.Replace(pattern, token[0], subtoken, 1)
+
+        // Cast type if available
+        if v.Type != 0 {
+            types[i] = v.Type
+        }
+
+        pattern = strings.Replace(pattern, v.Desc, subtoken, 1)
     }
 
     // Escape Special Characters
@@ -118,13 +140,16 @@ func (f *FilterRegex) Init() {
         f.Vars = make(KVList, f.Repeat * f.NumVars)
         for i,label := range labels {
             for j := 0; j < f.Repeat; j++ {
-                f.Vars[i + j * len(labels)].K = fmt.Sprintf("%s_%d", label, j)
+                index := i + j * len(labels)
+                f.Vars[index].K = fmt.Sprintf("%s_%d", label, j)
+                f.Vars[index].Type = types[i]
             }
         }
     } else {
         f.Vars = make(KVList, f.NumVars)
         for i,label := range labels {
             f.Vars[i].K = label
+            f.Vars[i].Type = types[i]
         }
     }
 }

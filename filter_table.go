@@ -58,19 +58,19 @@ func (f *FilterTable) GetVars() KVList {
 // to preallocate Vars (KVList).  HeaderMap should be lower case!!
 func (f *FilterTable) Prealloc() {
     headerMap := f.GetHeaderMap()
-    r, _ := regexp.Compile("\\{\\{\\s*(\\w*)\\s*:?\\s*\\$([^}]+)\\s*\\}\\}")
-    tokens := r.FindAllStringSubmatch(f.Desc, -1)
+    fvars     := GetFilterVars(f.Desc)
 
-    var baseLabels []string
+    baseLabels := make([]string, len(fvars))
+    types      := make([]uint8, len(fvars))
 
-    for _,token := range tokens {
-        label := strings.TrimSpace(token[1])
-        rule := strings.TrimSpace(token[2])
-        reg, _ := regexp.Compile("^[0-9]+$")
+    for i,v := range fvars {
+        label  := v.Name
+        rule   := v.Rule
+        reg, _ := regexp.Compile("^$[0-9]+$")
 
         if reg.MatchString(rule) {
             // (1) Matches ${index} pattern
-            num, err := strconv.ParseInt(rule, 10, 64)
+            num, err := strconv.ParseInt(rule[1:], 10, 64)
             if err != nil {
                 log.Fatalf("%s not a valid column rule.", rule)
             }
@@ -80,7 +80,7 @@ func (f *FilterTable) Prealloc() {
             }
         } else {
             // (2) Matches ${header} pattern
-            rule = strings.ToLower(rule)
+            rule = strings.ToLower(rule[1:])
             if num, ok := headerMap[rule]; ok {
                 f.ReqIndices = append(f.ReqIndices, num)
             } else {
@@ -91,7 +91,12 @@ func (f *FilterTable) Prealloc() {
             }
         }
 
-        baseLabels = append(baseLabels, label)
+        baseLabels[i] = label
+        if v.Type != 0 {
+            types[i] = v.Type
+        } else {
+            types[i] = S_CHAR
+        }
     }
 
     numBase := len(f.ReqIndices)
@@ -100,6 +105,7 @@ func (f *FilterTable) Prealloc() {
         for j := 0; j < f.NumRows; j++ {
             index := i + j * numBase
             f.Vars[index].K = fmt.Sprintf("%s_%d", baseLabels[i], j)
+            f.Vars[index].Type = types[i]
         }
     }
 }

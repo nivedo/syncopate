@@ -19,6 +19,7 @@ type (
         K     string
         V     string
         Force bool
+        Type  uint8
     }
     KVList []KVPair
     UploadEvent struct {
@@ -66,8 +67,11 @@ func (kv *KVPair) String() string {
 }
 
 func ConvertToValidSeriesKey(rawId string) string {
+    // Trim whitespace
+    newId := strings.TrimSpace(rawId)
+
     // Convert #, %
-    newId := strings.Replace(rawId, "#", "num_", -1)
+    newId = strings.Replace(rawId, "#", "num_", -1)
     newId = strings.Replace(newId, "%", "pct_", -1)
 
     // Conver space to _
@@ -99,7 +103,7 @@ func (u *Uploader) UploadKV(list KVList) {
     for _, v := range list {
         if v.Force || u.LastVal[v.K] != v.V {
             if u.Config.Debug {
-                log.Printf("[UploadKV] Uploading KV: %s, %s, %d", v.K, v.V, GetType(v.V))
+                log.Printf("[UploadKV] Uploading KV: %s, %s, %d", v.K, v.V, v.Type)
             }
             u.LastVal[v.K] = v.V
             u.Events <- UploadEvent{
@@ -107,7 +111,7 @@ func (u *Uploader) UploadKV(list KVList) {
                 Key:         v.K,
                 Value:       v.V,
                 Time:        now,
-                Type:        GetType(v.V),
+                Type:        v.Type,
             }
         }
     }
