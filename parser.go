@@ -25,6 +25,19 @@ type (
     }
 )
 
+func GetParser(info *ParserInfo) Parser {
+    switch info.Config.Mode {
+    case "any":
+        return NewAnyParser(info)
+    case "ordered":
+        return NewOrderedParser(info)
+    default:
+        log.Fatalf("Unknown parser for mode %s.", info.Config.Mode)
+    }
+
+    return nil
+}
+
 ///////////////////////////////////////////////////////////////////
 // AnyParser
 // ----------

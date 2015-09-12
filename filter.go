@@ -31,6 +31,9 @@ func GetFilter(opt Option_t) Filter {
     if IsFilterTable(opt) {
         return NewFilterTable(opt)
     }
+    if IsFilterDelim(opt) {
+        return NewFilterDelim(opt, nil)
+    }
 
     log.Fatalf("Filter doesn't exist for option %+v", opt)
     return nil

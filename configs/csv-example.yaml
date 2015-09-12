@@ -3,6 +3,6 @@ options:
   - headers: true
     delimiters: ","
     columns: >
-      {{ col1:$0 }}
-      {{ $header2 }}
-      {{ $2 }}
+      {{ col0:$0 }}
+      {{ (int) col1:$1 }}
+      {{ col3:$3 }}

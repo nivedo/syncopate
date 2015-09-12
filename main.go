@@ -16,12 +16,8 @@ func main() {
     uploader := NewUploader(config)
     go uploader.Start()
 
-    // Start Handler
-    // handlerInfo := &HandlerInfo{Config: config, Uploader: uploader, Data: data}
-    // handler := GetHandler(handlerInfo)
-    // handler.Run()
-
+    // Start Parser
     parserInfo := &ParserInfo{Config: config, Uploader: uploader, Data: data}
-    p := NewOrderedParser(parserInfo)
+    p := GetParser(parserInfo)
     p.Run()
 }

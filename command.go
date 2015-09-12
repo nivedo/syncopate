@@ -2,6 +2,7 @@ package main
 
 import (
     "bufio"
+    "bytes"
     "io"
     "log"
     "os"
@@ -69,6 +70,7 @@ func NewCommandInfo(cmd string, watchSec time.Duration) *CommandInfo {
         info.RequireArgs("-f", []string{"-f"})
     default:
         info.Type = CMD_CUSTOM
+        info.SetWatchSec(watchSec, -1.0)
     }
 
     return info
@@ -109,13 +111,20 @@ func StartCommands(info *CommandInfo, data chan string) {
         }
     } else {
         // Pipe stdin to reader
-        go ReadToBuffer(os.Stdin, data, false)
+        go SendData(os.Stdin, data)
     }
 }
 
 func WatchCommand(info *CommandInfo, data chan string) {
     for {
-        RunCommand(info, data)
+        cmd := exec.Command(info.Bin, info.Args...)
+        if output, err := cmd.Output(); err == nil {
+            buf := bytes.NewBuffer(output)
+            SendData(buf, data)
+        } else {
+            log.Fatal(err)
+        }
+        
         time.Sleep(info.WatchSec)
     }
 }
@@ -130,24 +139,18 @@ func RunCommand(info *CommandInfo, data chan string) {
     if err := cmd.Start(); err != nil {
         log.Fatal(err)
     }
-    ReadToBuffer(stdout, data, info.WatchSec > 0)
+    SendData(stdout, data)
     if err := cmd.Wait(); err != nil {
         log.Fatal(err)
     }
 }
 
-func ReadToBuffer(reader io.Reader, data chan string, stopAtEOF bool) {
-    r := bufio.NewReader(reader)
+func SendData(reader io.Reader, data chan string) {
+    s := bufio.NewScanner(reader)
 
-    for {
-        line,err := r.ReadString('\n')
-        data <- line
-        if err != nil && err != io.EOF {
-            log.Fatal(err)
-        }
-        if stopAtEOF && err == io.EOF {
-            data <- DATA_EOF
-            break
-        }
+    for s.Scan() {
+        data <- s.Text()
     }
+
+    data <- DATA_EOF
 }

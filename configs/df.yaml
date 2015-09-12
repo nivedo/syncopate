@@ -7,11 +7,11 @@ options:
   - header: Filesystem
     rows: 5
     table: >
-      {{ disk:$1 }}
-      {{ (int) total_size:$2 }}
-      {{ (int) used_size:$3 }}
-      {{ (int) avail_size:$4 }}
-      {{ capacity:$5 }}
-      {{ iused:$6 }}
-      {{ ifree:$7 }}
-      {{ pct_iused:$8 }}
+      {{ disk:$0 }}
+      {{ (int) total_size:$1 }}
+      {{ (int) used_size:$2 }}
+      {{ (int) avail_size:$3 }}
+      {{ capacity:$4 }}
+      {{ iused:$5 }}
+      {{ ifree:$6 }}
+      {{ pct_iused:$7 }}
