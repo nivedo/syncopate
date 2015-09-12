@@ -56,6 +56,10 @@ func GetTailCommandFlag() string {
     for i,arg := range args[1:] {
         if arg[0] == '-' {
             flag = true
+            // Single arg flags
+            if arg == "-debug" || arg == "-help" || strings.Index(arg, "=") > 0 {
+                flag = false
+            }
         } else if flag && arg[0] != '-' {
             flag = false
         } else {
