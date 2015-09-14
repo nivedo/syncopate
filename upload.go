@@ -6,6 +6,10 @@ import (
     "regexp"
     "fmt"
     "time"
+    "bytes"
+    "strconv"
+    "net/http"
+    "net/url"
 )
 
 const (
@@ -13,6 +17,7 @@ const (
     S_FLOAT  = 1 << iota
     S_CHAR   = 1 << iota
     S_UNKNOWN = 0
+    SYNC_URL = "http://localhost:8000/cluster-sync/"
 )
 
 type (
@@ -97,6 +102,29 @@ func (list *KVList) Print() {
 func (u *Uploader) Start() {
     d := NewTCPDispatcher(u.Config.Key, u.Events)
     d.Run()
+}
+
+func (u *Uploader) SyncKV(list KVList) bool {
+    data := url.Values{}
+    data.Set("group",u.Config.Group)
+    for _,v := range list {
+        data.Add("topic",v.K)
+    }
+
+    client := &http.Client{}
+    r, _ := http.NewRequest("POST", SYNC_URL, bytes.NewBufferString(data.Encode()))
+    r.Header.Add("Authorization", "OAuth " + u.Config.Key)
+    r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+    r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+
+    resp, _ := client.Do(r)
+    if resp.StatusCode == http.StatusForbidden {
+        log.Printf("API Key: %s synchronization failure.", u.Config.Key)
+        return false
+    }
+
+    log.Printf("API Key: %s synchronized with %+v",u.Config.Key, data)
+    return true
 }
 
 func (u *Uploader) UploadKV(list KVList) {

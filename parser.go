@@ -22,6 +22,7 @@ type (
         Info         *ParserInfo
         Filters      []Filter
         FilterIndex  int
+        Sync         bool  // Synced with webserver
     }
 )
 
@@ -97,12 +98,26 @@ func (p *OrderedParser) Parse(data string) {
 
 func (p *OrderedParser) CheckUpload() {
     if p.FilterIndex == len(p.Filters) {
+        if !p.Sync {
+            p.SyncKV()
+        }
         uploader := p.Info.Uploader
         for _,f := range p.Filters {
             uploader.UploadKV(f.GetVars())
         }
         p.FilterIndex = 0
     }
+}
+
+func (p *OrderedParser) SyncKV() {
+    if p.Sync {
+        return
+    }
+    var syncList KVList
+    for _,f := range p.Filters {
+        syncList = append(syncList, f.GetVars()...)
+    }
+    p.Sync = p.Info.Uploader.SyncKV(syncList)
 }
 
 func (p *OrderedParser) Run() {

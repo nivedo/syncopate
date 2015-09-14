@@ -18,7 +18,8 @@ const (
     SALT_64  = "1V3S#F"
     SALT_32  = "AB#*FP"
     //TCP_URL = "tcp://localhost:40899"
-    TCP_URL = "tcp://52.8.222.214:40899"
+    //TCP_URL = "tcp://52.8.222.214:40899"
+    TCP_URL = "tcp://45.33.39.21:40899"
     TCP_INTERVAL = time.Second * 1
     TCP_TIMEOUT  = time.Second * 5
     TCP_RECON    = time.Second * 10
