@@ -118,7 +118,7 @@ func (u *Uploader) SyncKV(list KVList) bool {
     r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 
     resp, _ := client.Do(r)
-    if resp.StatusCode == http.StatusForbidden {
+    if resp.StatusCode != http.StatusNoContent {
         log.Printf("API Key: %s synchronization failure.", u.Config.Key)
         return false
     }
