@@ -112,7 +112,11 @@ func (u *Uploader) SyncKV(list KVList) bool {
     }
 
     client := &http.Client{}
-    r, _ := http.NewRequest("POST", SYNC_URL, bytes.NewBufferString(data.Encode()))
+    r, err := http.NewRequest("POST", SYNC_URL, bytes.NewBufferString(data.Encode()))
+    if err != nil {
+        log.Printf("API Key: %s request failed.", u.Config.Key)
+        return false
+    }
     r.Header.Add("Authorization", "OAuth " + u.Config.Key)
     r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
     r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
